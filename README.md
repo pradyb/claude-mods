@@ -6,8 +6,9 @@ Mods (plugins) for Claude Code.
 
 ```
 /plugin marketplace add pradyb/claude-mods
-/plugin install safety-guard@claude-mods
 ```
+
+Then install the mods you want; each mod's README has its install command.
 
 ## Mods
 
@@ -18,7 +19,7 @@ Mods (plugins) for Claude Code.
 
 ## Versioning
 
-Each mod has its own semver in `<mod>/.claude-plugin/plugin.json`, a `CHANGELOG.md`, and git tags named `<mod>-vX.Y.Z`. Bump the version on every change users should receive.
+Each mod has its own semver in `<mod>/.claude-plugin/plugin.json`, and git tags named `<mod>-vX.Y.Z`. Changes are listed per mod in [CHANGELOG.md](CHANGELOG.md). Bump the version on every change users should receive.
 
 ## Development
 
