@@ -1,6 +1,6 @@
 # safety-guard
 
-Blocks destructive shell commands and access to secret files before Claude Code runs them. No setup needed.
+Blocks destructive shell commands and access to secret files before Claude Code runs them. No setup needed. Requires Claude Code 2.1.287 or later.
 
 ## Install
 
@@ -8,6 +8,8 @@ Blocks destructive shell commands and access to secret files before Claude Code 
 /plugin marketplace add pradyb/claude-mods
 /plugin install safety-guard@claude-mods
 ```
+
+Or in one step, from a session: `/plugin install safety-guard --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later).
 
 ## What it blocks
 

@@ -1,6 +1,6 @@
 # claude-mods
 
-Mods (plugins) for Claude Code.
+Mods (plugins) for Claude Code. Requires Claude Code 2.1.287 or later (`claude --version`).
 
 ## Install
 
@@ -8,7 +8,9 @@ Mods (plugins) for Claude Code.
 /plugin marketplace add pradyb/claude-mods
 ```
 
-Then install the mods you want; each mod's README has its install command.
+Then install the mods you want, for example `/plugin install safety-guard@claude-mods`, or add the marketplace and install in one step with `/plugin install <mod> --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later). Each mod's README has its own install command and settings.
+
+A mod runs with your permissions, so read what it does first. `claude plugin validate <mod>` lists the events a mod handles and the calls it makes without running it.
 
 ## Mods
 
@@ -20,12 +22,12 @@ Then install the mods you want; each mod's README has its install command.
 
 ## Versioning
 
-Each mod has its own semver in `<mod>/.claude-plugin/plugin.json`, and git tags named `<mod>-vX.Y.Z`. Changes are listed per mod in [CHANGELOG.md](CHANGELOG.md). Bump the version on every change users should receive.
+Each mod has its own semver in `<mod>/.claude-plugin/plugin.json`. Releases are tagged `<mod>--vX.Y.Z` with `claude plugin tag` (the first releases of `safety-guard` and `notify-router` use the older `<mod>-vX.Y.Z` form). Changes are listed per mod in [CHANGELOG.md](CHANGELOG.md). Bump the version on every change users should receive: Claude Code does not offer an update for a changed plugin whose version stayed the same.
 
 ## Development
 
 ```
-claude plugin validate <mod>
+claude plugin validate --strict <mod>
 claude plugin test <mod>
 ```
 

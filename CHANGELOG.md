@@ -1,6 +1,6 @@
 # Changelog
 
-Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`) and tagged `<mod>-vX.Y.Z`.
+Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`) and tagged `<mod>--vX.Y.Z`. The first releases of `safety-guard` and `notify-router` carry the older `<mod>-vX.Y.Z` tags.
 
 ## notify-router
 

@@ -31,10 +31,10 @@ jobs:
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Validate marketplace
-        run: claude plugin validate .
+        run: claude plugin validate --strict .
 
       - name: Validate mod
-        run: claude plugin validate ${{ matrix.mod }}
+        run: claude plugin validate --strict ${{ matrix.mod }}
 
       - name: Test mod
         run: claude plugin test ${{ matrix.mod }}
