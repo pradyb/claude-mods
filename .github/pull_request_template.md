@@ -30,5 +30,5 @@
 ## Checklist
 
 - [ ] The mod's README is updated if user-facing behaviour changed
-- [ ] `version` bumped in `<mod>/.claude-plugin/plugin.json` and the root `CHANGELOG.md` updated
+- [ ] `version` bumped in `<mod>/.claude-plugin/plugin.json`, the root `README.md` mods table and the root `CHANGELOG.md` updated
 - [ ] No real ntfy topics, tokens, webhook URLs or credentials in code, tests, or fixtures

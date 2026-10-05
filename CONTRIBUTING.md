@@ -25,7 +25,7 @@ CI runs the same checks for every mod on each push and PR.
 - Keep each mod dependency-free: no `package.json`, no bundler.
 - Add a test (`hooks/register.test.ts`) for any new rule, sink or block pattern, including a case that must **not** trigger.
 - Update the mod's README if you change user-facing behaviour.
-- Bump `version` in `<mod>/.claude-plugin/plugin.json` and add an entry to the root `CHANGELOG.md` for any change users would notice. Releases are tagged `<mod>--vX.Y.Z` with `claude plugin tag <mod>` (run it from a clean working tree; add `--push`).
+- Bump `version` in `<mod>/.claude-plugin/plugin.json`, in the mods table of the root `README.md`, and add an entry to the root `CHANGELOG.md` for any change users would notice. Releases are tagged `<mod>--vX.Y.Z` with `claude plugin tag <mod>` (run it from a clean working tree; add `--push`).
 - Never commit real ntfy topics, tokens, webhook URLs or credentials, including in tests and fixtures.
 
 ## Questions
