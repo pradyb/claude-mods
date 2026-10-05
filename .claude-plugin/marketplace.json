@@ -9,6 +9,11 @@
       "name": "safety-guard",
       "source": "./safety-guard",
       "description": "Blocks destructive shell commands and access to secret files (.env, SSH keys, cloud credentials)."
+    },
+    {
+      "name": "notify-router",
+      "source": "./notify-router",
+      "description": "Rules for alerts: done, blocked (if still waiting) and error, to a chime, macOS notifications and ntfy, with quiet hours and dedupe."
     }
   ],
   "description": "Mods (plugins) for Claude Code."

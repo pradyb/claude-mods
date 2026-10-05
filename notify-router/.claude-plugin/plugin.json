@@ -1,0 +1,78 @@
+{
+  "name": "notify-router",
+  "version": "0.1.0",
+  "description": "Rules for Claude Code alerts: when one is worth sending (done, blocked, error) and where it goes (chime, macOS notification, ntfy).",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  },
+  "userConfig": {
+    "notifyOn": {
+      "type": "string",
+      "title": "Events to alert on",
+      "description": "Comma-separated: done, blocked, error.",
+      "default": "done,blocked,error"
+    },
+    "doneAfterSeconds": {
+      "type": "number",
+      "title": "Done: minimum turn length (seconds)",
+      "description": "Only alert that a turn is done if it took at least this long.",
+      "default": 20
+    },
+    "blockedAfterSeconds": {
+      "type": "number",
+      "title": "Blocked: wait before alerting (seconds)",
+      "description": "Alert only if Claude is still waiting on you after this long. 0 alerts at once.",
+      "default": 60
+    },
+    "quietHours": {
+      "type": "string",
+      "title": "Quiet hours",
+      "description": "Local time as HH:MM-HH:MM, may wrap past midnight (22:00-07:00). Alerts inside it are dropped. Empty = off.",
+      "default": ""
+    },
+    "dedupeSeconds": {
+      "type": "number",
+      "title": "Don't repeat the same alert within (seconds)",
+      "description": "Per event type. 0 = off.",
+      "default": 60
+    },
+    "includeFolder": {
+      "type": "boolean",
+      "title": "Include the folder name in alerts",
+      "description": "Puts the session's folder name in the alert title so you can tell which session needs you. The name is sent to every sink, ntfy.sh included.",
+      "default": true
+    },
+    "desktop": {
+      "type": "boolean",
+      "title": "macOS desktop notification",
+      "description": "Send alerts to Notification Center (macOS only).",
+      "default": true
+    },
+    "chime": {
+      "type": "boolean",
+      "title": "Play a chime",
+      "description": "Play a short sound with each alert (macOS only). Quiet hours, dedupe and the event filter apply.",
+      "default": true
+    },
+    "ntfyTopic": {
+      "type": "string",
+      "title": "ntfy topic",
+      "description": "Send alerts to this ntfy topic. On the public ntfy.sh the topic name is the only secret: use a long random one. Empty = off.",
+      "default": "",
+      "sensitive": true
+    },
+    "ntfyServer": {
+      "type": "string",
+      "title": "ntfy server",
+      "description": "Base URL of the ntfy server.",
+      "default": "https://ntfy.sh"
+    },
+    "ntfyToken": {
+      "type": "string",
+      "title": "ntfy access token",
+      "description": "For a protected topic. Empty = none.",
+      "default": "",
+      "sensitive": true
+    }
+  }
+}
