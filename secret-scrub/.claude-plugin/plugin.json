@@ -1,0 +1,20 @@
+{
+  "name": "secret-scrub",
+  "version": "0.1.0",
+  "description": "Catches API keys, tokens and private keys in the prompt you are about to send, and masks or blocks them before they reach the model.",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/secret-scrub",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT",
+  "userConfig": {
+    "mode": {
+      "type": "string",
+      "title": "What to do with a secret",
+      "description": "mask: replace it with [REDACTED: <kind>] and send the prompt. block: refuse the prompt so you can remove it.",
+      "options": ["mask", "block"],
+      "default": "mask"
+    }
+  }
+}

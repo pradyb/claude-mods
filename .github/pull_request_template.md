@@ -5,6 +5,7 @@
 ## Mod
 
 - [ ] safety-guard
+- [ ] secret-scrub
 - [ ] notify-router
 - [ ] Repo-wide (docs, CI, tooling)
 

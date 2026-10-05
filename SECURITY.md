@@ -29,6 +29,12 @@ In scope: any way a value from a prompt, a tool result or Claude's own output ca
 arguments (for example into the macOS notification call or the HTTP request), leak the topic or token
 (including into logs), or send data to a destination that was not configured in your settings.
 
+**secret-scrub** is a best-effort filter for known credential formats in the prompt you submit. A credential
+format it does not recognise is a **known limit, not a vulnerability**; a pattern pull request is welcome.
+In scope: any way the secret itself ends up in a log, a toast, the refusal reason or anything else the mod
+writes, or a way to make the mod crash, hang (for example a pattern that backtracks badly on crafted input)
+or alter a prompt that contains no secret.
+
 **safety-guard** is a best-effort filter, not a sandbox. It matches commands with regexes and word
 splitting, so a command it fails to recognise, such as one wrapped in `bash -c` or built from variables, is a
 **known limit, not a vulnerability**. It is documented in the mod's README, and a pull request that

@@ -10,6 +10,11 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 ### 0.1.0
 - Initial release: alerts for `done`, `blocked` (only if still waiting after N seconds) and `error`; quiet hours; dedupe; chime, macOS desktop and ntfy sinks; the alert title names the session's folder (`includeFolder`).
 
+## secret-scrub
+
+### 0.1.0
+- Initial release: masks or blocks API keys, tokens and private keys (AWS, GitHub, Anthropic, OpenAI, Slack, Stripe, Google, npm, PEM private keys) in the prompt before it reaches the model. `mode` setting: `mask` (default) or `block`.
+
 ## safety-guard
 
 ### 0.1.0

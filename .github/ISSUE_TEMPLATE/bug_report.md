@@ -12,7 +12,7 @@ A clear and concise description of what the bug is.
 
 ## Mod
 
-safety-guard / notify-router
+safety-guard / secret-scrub / notify-router
 
 ## Steps to Reproduce
 

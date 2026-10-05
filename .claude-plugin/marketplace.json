@@ -11,6 +11,11 @@
       "description": "Blocks destructive shell commands and access to secret files (.env, SSH keys, cloud credentials)."
     },
     {
+      "name": "secret-scrub",
+      "source": "./secret-scrub",
+      "description": "Masks or blocks API keys, tokens and private keys in your prompt before they reach the model."
+    },
+    {
       "name": "notify-router",
       "source": "./notify-router",
       "description": "Rules for alerts: done, blocked (if still waiting), error and context or rate-limit usage, to a chime, macOS notifications and ntfy, with quiet hours and dedupe."
