@@ -1,7 +1,7 @@
 {
   "name": "notify-router",
-  "version": "0.1.0",
-  "description": "Rules for Claude Code alerts: when one is worth sending (done, blocked, error) and where it goes (chime, macOS notification, ntfy).",
+  "version": "0.2.0",
+  "description": "Rules for Claude Code alerts: when one is worth sending (done, blocked, error, usage limits) and where it goes (chime, macOS notification, ntfy).",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
   },
@@ -12,8 +12,8 @@
     "notifyOn": {
       "type": "string",
       "title": "Events to alert on",
-      "description": "Comma-separated: done, blocked, error.",
-      "default": "done,blocked,error"
+      "description": "Comma-separated: done, blocked, error, usage.",
+      "default": "done,blocked,error,usage"
     },
     "doneAfterSeconds": {
       "type": "number",
@@ -26,6 +26,12 @@
       "title": "Blocked: wait before alerting (seconds)",
       "description": "Alert only if Claude is still waiting on you after this long. 0 alerts at once.",
       "default": 60
+    },
+    "usageThresholds": {
+      "type": "string",
+      "title": "Usage alert thresholds (%)",
+      "description": "Alert when the context window or a rate-limit window (5-hour, 7-day) crosses each of these percentages. Comma-separated. Empty = off. Rate limits are only reported on a subscription.",
+      "default": "80,95"
     },
     "quietHours": {
       "type": "string",

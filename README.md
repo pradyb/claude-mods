@@ -15,7 +15,7 @@ Then install the mods you want; each mod's README has its install command.
 | Mod | What it does |
 |---|---|
 | [safety-guard](safety-guard) | Blocks destructive shell commands (`rm -rf /`, force push, `reset --hard`, `curl \| sh`, ...) and access to secret files (`.env`, SSH keys, cloud credentials). |
-| [notify-router](notify-router) | Rules for alerts: done, blocked (only if still waiting) and error, sent to a chime, macOS notifications and ntfy, with quiet hours and dedupe. |
+| [notify-router](notify-router) | Rules for alerts: done, blocked (only if still waiting), error, and context or rate-limit usage, sent to a chime, macOS notifications and ntfy, with quiet hours and dedupe. |
 
 ## Versioning
 

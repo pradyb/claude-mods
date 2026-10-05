@@ -3,10 +3,11 @@
 Rules for Claude Code alerts: decide **when** an alert is worth sending and **where** it goes.
 
 - Alert when a turn is **done** (only if it took a while), when Claude is **blocked** on you (only if it **stays** blocked for N seconds), or when a turn ends in an **error**
+- Alert when your **context window** or a **rate-limit window** (5-hour, 7-day) crosses a threshold, with the time it resets
 - Quiet hours, and no repeats of the same alert
 - Send to a chime, macOS Notification Center and/or [ntfy](https://ntfy.sh) (phone)
 
-Inspired by [herdr-notify-router](https://github.com/pradyb/herdr-notify-router).
+Inspired by [herdr-notify-router](https://github.com/pradyb/herdr-notify-router). Requires Claude Code 2.1.287 or later.
 
 ## Install
 
@@ -15,15 +16,18 @@ Inspired by [herdr-notify-router](https://github.com/pradyb/herdr-notify-router)
 /plugin install notify-router@claude-mods
 ```
 
+Or in one step, from a session: `/plugin install notify-router --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later).
+
 ## Settings
 
 Set these with `/plugin configure notify-router`, then run `/reload-plugins`. Sensitive settings (`ntfyTopic`, `ntfyToken`) are kept in secure storage and are not rows in `/config`. `claude plugin configure notify-router@claude-mods` lists every setting and whether it is set, without showing values; "not set" means the default applies.
 
 | Setting | Default | |
 |---|---|---|
-| `notifyOn` | `done,blocked,error` | Which events alert |
+| `notifyOn` | `done,blocked,error,usage` | Which events alert |
 | `doneAfterSeconds` | `20` | `done` only alerts if the turn took at least this long |
 | `blockedAfterSeconds` | `60` | `blocked` alerts only if you haven't acted by then; 0 = at once |
+| `usageThresholds` | `80,95` | Alert when the context window or a rate-limit window crosses each of these percentages; empty = off |
 | `quietHours` | empty | `HH:MM-HH:MM`, local time, may wrap past midnight (`22:00-07:00`) |
 | `dedupeSeconds` | `60` | Don't repeat the same event type within this time; 0 = off |
 | `includeFolder` | `true` | Put the session's folder name in the alert title (`Claude Code: my-project`) so you can tell which session needs you |
@@ -34,6 +38,18 @@ Set these with `/plugin configure notify-router`, then run `/reload-plugins`. Se
 | `ntfyToken` | empty | Access token for a protected topic. Stored as a sensitive value |
 
 A pending `blocked` alert is cancelled as soon as you act (submit a prompt, or a tool runs after you approve it), or the turn ends.
+
+## Usage alerts
+
+Claude Code reports how full the context window is and, on a subscription, how much of each rate-limit window you have used. notify-router alerts when one of them crosses a threshold from `usageThresholds` (80% and 95% by default):
+
+- `Context window 81% full`
+- `5-hour limit at 82%, resets in 1h 20m`
+- `7-day limit at 95%, resets in 2d 3h`
+
+Each metric is tracked separately and each threshold alerts **once**: you are told at 80%, then again at 95%, not on every request in between. If a metric drops back (the context is compacted, or a window resets), crossing the threshold alerts again. Quiet hours, the chime and every sink apply as for any other alert.
+
+Rate limits are only reported on a subscription (Pro or Max), and only after the first response, so on an API key you will only get the context alerts. To turn usage alerts off, empty `usageThresholds` or remove `usage` from `notifyOn`.
 
 ## Phone alerts with ntfy
 
@@ -72,6 +88,7 @@ Alerts carry only the session's folder name (turn off with `includeFolder`) and 
 Nothing here is committed to a release date. Open an issue if one of these matters to you.
 
 **Next release**
+- [x] ~~Usage alerts~~ (shipped in 0.2.0)
 - [ ] **Webhook sink**: Slack, Discord and plain JSON, with the URL kept as a sensitive setting. Slack text is escaped and Discord mentions are disabled, so a folder or branch name can't ping anyone.
 - [ ] **Team policy file**: a committed `.claude/notify.toml` that shares **rules** only (events, delays, which sinks), never destinations or URLs, so every teammate keeps their own channels. Same model as herdr-notify-router's `.herdr/notify.toml`.
 

@@ -1,5 +1,5 @@
 import { test, expect, mock } from 'claude-code/testing'
-import { inQuietHours } from './register'
+import { formatReset, inQuietHours, parseThresholds, thresholdAlert } from './register'
 
 const at = (h: number, m = 0) => new Date(2026, 0, 1, h, m).getTime() // local time
 const done = (secs: number, over: object = {}) => ({ answer: 'ok', durationMs: secs * 1000, isAborted: false, turnId: 't', reason: 'answer', ...over }) as never
@@ -16,6 +16,7 @@ function engine(on: any, now = at(12), withClock = true, cwd = '/Users/x/my-proj
   on('session.cwd', () => ({ value: cwd }))
   on('turn.complete', (_$: any, e: any) => ({ text: e.answer }))
   on('classic.Notification', () => ({}))
+  on('session.measure', (_$: any, e: any) => ({ changed: e.changed }))
   return seen
 }
 
@@ -166,4 +167,82 @@ test('chime off', { options: { chime: false } }, async ($, on) => {
   await settle()
   expect(seen.chimes).toBe(0)
   expect(seen.desktop.length).toBe(1)
+})
+
+// ---- usage alerts
+const ctx = (percent: number) => ({ context: { window: 200_000, percent }, rateLimits: [], changed: ['context'] }) as never
+const limit = (kind: string, percentUsed: number, resetsAt?: string) =>
+  ({ context: { window: 200_000 }, rateLimits: [{ kind, percentUsed, resetsAt }], changed: ['rateLimits'] }) as never
+
+test('parseThresholds keeps valid percentages, sorted and unique', () => {
+  expect(parseThresholds('95, 80,80,abc,0,150,-5')).toEqual([80, 95])
+  expect(parseThresholds('')).toEqual([])
+})
+
+test('thresholdAlert: alerts on a new higher threshold, once, and re-arms after a drop', () => {
+  const t = [80, 95]
+  expect(thresholdAlert(t, 50, 0)).toEqual({ announced: 0 })
+  expect(thresholdAlert(t, 81, 0)).toEqual({ announced: 80, alert: 80 })
+  expect(thresholdAlert(t, 85, 80)).toEqual({ announced: 80 })
+  expect(thresholdAlert(t, 96, 80)).toEqual({ announced: 95, alert: 95 })
+  expect(thresholdAlert(t, 85, 95)).toEqual({ announced: 80 }) // compaction: back to the 80 band
+  expect(thresholdAlert(t, 96, 80)).toEqual({ announced: 95, alert: 95 }) // ...and 95 alerts again
+  expect(thresholdAlert(t, 10, 95)).toEqual({ announced: 0 })
+})
+
+test('formatReset', () => {
+  expect(formatReset(80 * 60_000)).toBe('1h 20m')
+  expect(formatReset(45 * 60_000)).toBe('45m')
+  expect(formatReset(30_000)).toBe('1m')
+  expect(formatReset((2 * 1440 + 3 * 60) * 60_000)).toBe('2d 3h')
+  expect(formatReset(-5)).toBe('')
+  expect(formatReset(NaN)).toBe('')
+})
+
+test('usage: context alerts at each threshold once', async ($, on) => {
+  const seen = engine(on)
+  await $.session.measure(ctx(50)); await settle()
+  expect(seen.desktop.length).toBe(0)
+  await $.session.measure(ctx(81)); await settle()
+  expect(seen.desktop.length).toBe(1)
+  expect(seen.desktop[0]).toContain('Context window 81% full')
+  await $.session.measure(ctx(85)); await settle()
+  expect(seen.desktop.length).toBe(1)
+  await $.session.measure(ctx(96)); await settle()
+  expect(seen.desktop.length).toBe(2)
+  expect(seen.desktop[1]).toContain('Context window 96% full')
+})
+
+test('usage: a rate-limit window names itself and when it resets', async ($, on) => {
+  const seen = engine(on)
+  await $.session.measure(limit('five_hour', 82.5, new Date(at(12) + 80 * 60_000).toISOString())); await settle()
+  expect(seen.desktop.length).toBe(1)
+  expect(seen.desktop[0]).toContain('5-hour limit at 82%, resets in 1h 20m')
+})
+
+test('usage: metrics are tracked separately', async ($, on) => {
+  const seen = engine(on)
+  await $.session.measure(limit('five_hour', 85)); await settle()
+  await $.session.measure(limit('seven_day', 85)); await settle()
+  expect(seen.desktop.length).toBe(2)
+  expect(seen.desktop[1]).toContain('7-day limit at 85%')
+})
+
+test('usage: off with empty thresholds, or when usage is not in notifyOn', { options: { usageThresholds: '' } }, async ($, on) => {
+  const seen = engine(on)
+  await $.session.measure(ctx(99)); await settle()
+  expect(seen.desktop.length).toBe(0)
+})
+
+test('usage: not alerted when notifyOn leaves it out', { options: { notifyOn: 'done,blocked,error' } }, async ($, on) => {
+  const seen = engine(on)
+  await $.session.measure(ctx(99)); await settle()
+  expect(seen.desktop.length).toBe(0)
+})
+
+test('usage: quiet hours drop it, and the chime stays silent', { options: { quietHours: '22:00-07:00' } }, async ($, on) => {
+  const seen = engine(on, at(23, 30))
+  await $.session.measure(ctx(99)); await settle()
+  expect(seen.desktop.length).toBe(0)
+  expect(seen.chimes).toBe(0)
 })

@@ -13,7 +13,7 @@
     {
       "name": "notify-router",
       "source": "./notify-router",
-      "description": "Rules for alerts: done, blocked (if still waiting) and error, to a chime, macOS notifications and ntfy, with quiet hours and dedupe."
+      "description": "Rules for alerts: done, blocked (if still waiting), error and context or rate-limit usage, to a chime, macOS notifications and ntfy, with quiet hours and dedupe."
     }
   ],
   "description": "Mods (plugins) for Claude Code."
