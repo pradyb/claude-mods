@@ -1,5 +1,5 @@
 import { test, expect, mock } from 'claude-code/testing'
-import { formatReset, inList, inQuietHours, parseThresholds, thresholdAlert } from './register'
+import { formatReset, inList, webhookBody, webhookFormat, inQuietHours, parseThresholds, thresholdAlert } from './register'
 
 const at = (h: number, m = 0) => new Date(2026, 0, 1, h, m).getTime() // local time
 const done = (secs: number, over: object = {}) => ({ answer: 'ok', durationMs: secs * 1000, isAborted: false, turnId: 't', reason: 'answer', ...over }) as never
@@ -303,4 +303,73 @@ test('no sessionLabel by default', async ($, on) => {
   await $.turn.complete(done(30))
   await settle()
   expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+})
+
+// ---- 0.4.0: webhook sink
+const SLACK = 'https://hooks.slack.com/services/T000/B000/xxxx'
+const DISCORD = 'https://discord.com/api/webhooks/123/abc'
+const A = { kind: 'done' as const, title: 'Claude Code: my-proj', text: 'Done in 42s', at: '2026-01-01T12:00:00.000Z' }
+
+test('webhookFormat: auto-detects Slack and Discord from the host, anything else is JSON, a setting wins', () => {
+  expect(webhookFormat(SLACK, 'auto')).toBe('slack')
+  expect(webhookFormat('https://hooks.slack-gov.com/services/x', 'auto')).toBe('slack')
+  expect(webhookFormat(DISCORD, 'auto')).toBe('discord')
+  expect(webhookFormat('https://discordapp.com/api/webhooks/1/a', 'auto')).toBe('discord')
+  expect(webhookFormat('https://example.com/hook', 'auto')).toBe('json')
+  expect(webhookFormat('https://hooks.slack.com.evil.example/x', 'auto')).toBe('json')
+  expect(webhookFormat('https://example.com/hooks.slack.com', 'auto')).toBe('json')
+  expect(webhookFormat('https://hooks.slack.com@example.com/x', 'auto')).toBe('json')
+  expect(webhookFormat('https://example.com/hook', 'slack')).toBe('slack')
+  expect(webhookFormat(SLACK, 'json')).toBe('json')
+})
+
+test('webhookBody slack: text is escaped so no mention or link can form', () => {
+  expect(JSON.parse(webhookBody('slack', A))).toEqual({ text: '*Claude Code: my-proj*\nDone in 42s' })
+  const b = JSON.parse(webhookBody('slack', { ...A, title: 'Claude Code: <!channel>', text: 'ping <@U123> & <https://x.example|click>' }))
+  expect(b.text).toBe('*Claude Code: &lt;!channel&gt;*\nping &lt;@U123&gt; &amp; &lt;https://x.example|click&gt;')
+  expect(b.text).not.toContain('<')
+})
+
+test('webhookBody discord: mentions are disabled', () => {
+  const b = JSON.parse(webhookBody('discord', { ...A, text: '@everyone <@&123> hi' }))
+  expect(b.allowed_mentions).toEqual({ parse: [] })
+  expect(b.content).toBe('**Claude Code: my-proj**\n@everyone <@&123> hi')
+  expect(JSON.parse(webhookBody('discord', { ...A, text: 'x'.repeat(5000) })).content.length).toBe(2000)
+})
+
+test('webhookBody json: event, title, message and time', () => {
+  expect(JSON.parse(webhookBody('json', A))).toEqual({ event: 'done', title: 'Claude Code: my-proj', message: 'Done in 42s', at: '2026-01-01T12:00:00.000Z' })
+})
+
+test('webhook: an alert is posted to the URL as JSON, in the format the host calls for', { options: { webhookUrl: SLACK } }, async ($, on) => {
+  const seen = engine(on)
+  await $.turn.complete(done(42))
+  await settle()
+  expect(seen.ntfy.length).toBe(1)
+  expect(seen.ntfy[0].url).toBe(SLACK)
+  expect(seen.ntfy[0].init.method).toBe('POST')
+  expect(seen.ntfy[0].init.headers['Content-Type']).toBe('application/json')
+  expect(JSON.parse(seen.ntfy[0].init.body)).toEqual({ text: '*Claude Code: my-proj*\nDone in 42s' })
+})
+
+test('webhook: the event filter, quiet hours and dedupe apply to it', { options: { webhookUrl: DISCORD, notifyOn: 'error', ...OFF, quietHours: '' } }, async ($, on) => {
+  const seen = engine(on)
+  await $.turn.complete(done(42))
+  await settle()
+  expect(seen.ntfy.length).toBe(0)
+})
+
+test('webhook: a URL that is not http(s) is never fetched', { options: { webhookUrl: 'file:///etc/passwd' } }, async ($, on) => {
+  const seen = engine(on)
+  await $.turn.complete(done(42))
+  await settle()
+  expect(seen.ntfy.length).toBe(0)
+  expect(seen.desktop.length).toBe(1)
+})
+
+test('webhook: off when no URL is set', async ($, on) => {
+  const seen = engine(on)
+  await $.turn.complete(done(42))
+  await settle()
+  expect(seen.ntfy.length).toBe(0)
 })

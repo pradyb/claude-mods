@@ -18,7 +18,7 @@ A mod runs with your permissions, so read what it does first. `claude plugin val
 |---|---|
 | [safety-guard](safety-guard) | Blocks destructive shell commands (`rm -rf /`, force push, `reset --hard`, `curl \| sh`, ...) and access to secret files (`.env`, SSH keys, cloud credentials). |
 | [secret-scrub](secret-scrub) | Catches API keys, tokens and private keys in the prompt you are about to send, and masks or blocks them before they reach the model. |
-| [notify-router](notify-router) | Rules for alerts: done, blocked (only if still waiting), error, and context or rate-limit usage, sent to a chime, macOS notifications and ntfy, with quiet hours and dedupe. |
+| [notify-router](notify-router) | Rules for alerts: done, blocked (only if still waiting), error, and context or rate-limit usage, sent to a chime, macOS notifications, ntfy and Slack, Discord or JSON webhooks, with quiet hours and dedupe. |
 
 ## Versioning
 

@@ -1,7 +1,7 @@
 {
   "name": "notify-router",
-  "version": "0.3.0",
-  "description": "Rules for Claude Code alerts: when one is worth sending (done, blocked, error, usage limits) and where it goes (chime, macOS notification, ntfy).",
+  "version": "0.4.0",
+  "description": "Rules for Claude Code alerts: when one is worth sending (done, blocked, error, usage limits) and where it goes (chime, macOS notification, ntfy, Slack, Discord or a JSON webhook).",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
   },
@@ -94,6 +94,25 @@
       "description": "For a protected topic. Empty = none.",
       "default": "",
       "sensitive": true
+    },
+    "webhookUrl": {
+      "type": "string",
+      "title": "Webhook URL",
+      "description": "Send alerts to a Slack or Discord incoming webhook, or any URL that accepts a JSON POST. The URL is a secret: anyone who has it can post to the channel. Empty = off.",
+      "default": "",
+      "sensitive": true
+    },
+    "webhookFormat": {
+      "type": "string",
+      "title": "Webhook format",
+      "description": "auto picks Slack or Discord from the URL, otherwise plain JSON ({event, title, message, at}).",
+      "options": [
+        "auto",
+        "slack",
+        "discord",
+        "json"
+      ],
+      "default": "auto"
     }
   }
 }

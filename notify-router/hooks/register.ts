@@ -12,6 +12,28 @@ const WINDOW_LABEL: Record<string, string> = { five_hour: '5-hour limit', seven_
 // The list settings (notifyOn, chimeOn) are comma-separated event names: "done, error" has "error".
 export const inList = (spec: unknown, kind: string): boolean => String(spec).split(',').some(s => s.trim() === kind)
 
+type WebhookFormat = 'slack' | 'discord' | 'json'
+
+// `auto` picks the format from the URL's host: Slack and Discord webhooks are recognisable, anything else gets plain JSON.
+export function webhookFormat(url: string, setting: unknown): WebhookFormat {
+  if (setting === 'slack' || setting === 'discord' || setting === 'json') return setting
+  const host = (/^https?:\/\/(?:[^/?#@]*@)?([^/?#:]+)/i.exec(url)?.[1] ?? '').toLowerCase()
+  if (/(^|\.)slack(-gov)?\.com$/.test(host)) return 'slack'
+  if (/(^|\.)discord(app)?\.com$/.test(host)) return 'discord'
+  return 'json'
+}
+
+// The request body. Slack: `&`, `<` and `>` are escaped, so `<!channel>` or `<@U123>` in a folder name or message is plain text and pings no one.
+// Discord: `allowed_mentions.parse` is empty, so `@everyone` and role mentions never ping. JSON: the fields as they are.
+export function webhookBody(format: WebhookFormat, a: { kind: Kind; title: string; text: string; at: string }): string {
+  if (format === 'slack') {
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    return JSON.stringify({ text: `*${esc(a.title)}*\n${esc(a.text)}` })
+  }
+  if (format === 'discord') return JSON.stringify({ content: `**${a.title}**\n${a.text}`.slice(0, 2000), allowed_mentions: { parse: [] } })
+  return JSON.stringify({ event: a.kind, title: a.title, message: a.text, at: a.at })
+}
+
 // "80,95" -> [80, 95]; ignores anything that is not a percentage.
 export function parseThresholds(spec: string): number[] {
   return [...new Set(spec.split(',').map(s => Number(s.trim())).filter(n => n > 0 && n <= 100))].sort((a, b) => a - b)
@@ -75,6 +97,14 @@ async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, n
       const headers: Record<string, string> = { Title: title.replace(/[^\x20-\x7E]/g, '?'), Tags: NTFY_TAG[kind], Priority: kind === 'done' ? 'default' : 'high' }
       if (o.ntfyToken) headers.Authorization = `Bearer ${o.ntfyToken}`
       sinks.push(['ntfy', $.http.fetch(`${server}/${encodeURIComponent(String(o.ntfyTopic))}`, { method: 'POST', headers, body: text })])
+    }
+
+    if (o.webhookUrl) {
+      const url = String(o.webhookUrl)
+      if (/^https?:\/\//i.test(url)) {
+        const body = webhookBody(webhookFormat(url, o.webhookFormat), { kind, title, text, at: d.toISOString() })
+        sinks.push(['webhook', $.http.fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })])
+      } else $.ui.log('notify-router: webhookUrl must start with http:// or https://', { to: 'debug' })
     }
 
     const results = await Promise.allSettled(sinks.map(([, p]) => p))
