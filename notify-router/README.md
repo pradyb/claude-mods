@@ -31,11 +31,15 @@ Set these with `/plugin configure notify-router`, then run `/reload-plugins`. Se
 | `quietHours` | empty | `HH:MM-HH:MM`, local time, may wrap past midnight (`22:00-07:00`) |
 | `dedupeSeconds` | `60` | Don't repeat the same event type within this time; 0 = off |
 | `includeFolder` | `true` | Put the session's folder name in the alert title (`Claude Code: my-project`) so you can tell which session needs you |
+| `sessionLabel` | `false` | Add the first 4 characters of the session id to the title (`Claude Code: my-project #a1b2`) so two sessions in the same folder can be told apart |
 | `chime` | `true` | Play a short sound with each alert (macOS only). Quiet hours, dedupe and the event filter apply to it |
+| `chimeOn` | `done,blocked,error,usage` | Which events play the chime. Leave one out to keep its notification but not its sound |
 | `desktop` | `true` | macOS Notification Center (macOS only) |
 | `ntfyTopic` | empty | Send to this ntfy topic; empty = off. Stored as a sensitive value |
 | `ntfyServer` | `https://ntfy.sh` | Base URL of your ntfy server |
 | `ntfyToken` | empty | Access token for a protected topic. Stored as a sensitive value |
+
+Each event has its own sound: `done` a rising chime, `blocked` three quick beeps, `error` a falling low tone. `usage` uses the `blocked` sound.
 
 A pending `blocked` alert is cancelled as soon as you act (submit a prompt, or a tool runs after you approve it), or the turn ends.
 
@@ -73,13 +77,13 @@ With no `ntfyTopic` set, nothing is sent to ntfy: only the macOS notification an
 
 ## Privacy
 
-Alerts carry only the session's folder name (turn off with `includeFolder`) and a short status line ("Done in 42s", or Claude's own "needs your permission to use Bash"), never the conversation. The folder name goes to every sink, so on a public ntfy server it reveals your project names. On the public ntfy.sh the **topic name is the only secret**: use a long random one, or a protected topic with a token. Failures are logged at debug level (`claude --debug`) with the sink name and HTTP status only, never the topic.
+Alerts carry only the session's folder name (turn off with `includeFolder`), the 4-character session label if you turned `sessionLabel` on, and a short status line ("Done in 42s", or Claude's own "needs your permission to use Bash"), never the conversation. The folder name goes to every sink, so on a public ntfy server it reveals your project names. On the public ntfy.sh the **topic name is the only secret**: use a long random one, or a protected topic with a token. Failures are logged at debug level (`claude --debug`) with the sink name and HTTP status only, never the topic.
 
 ## Limits
 
 - The chime and notifications are macOS-only. Notifications show the **Script Editor** icon, and may need allowing in System Settings → Notifications.
 - No terminal-focus detection, so there is no `skip_if_focused`.
-- The title is the folder's name, not a session id: two sessions in the same folder look alike.
+- Without `sessionLabel`, the title is only the folder's name, so two sessions in the same folder look alike. The label is a slice of the session id, not a name you choose: the API exposes no session title.
 - Dedupe state and a pending `blocked` timer live in memory and are lost on reload or restart.
 - Not yet: webhook sinks and a team policy file; see the [Roadmap](#roadmap).
 
@@ -88,13 +92,12 @@ Alerts carry only the session's folder name (turn off with `includeFolder`) and 
 Nothing here is committed to a release date. Open an issue if one of these matters to you.
 
 **Next release**
+- [x] ~~Session label in the title; a different sound per event, and the chime off per event~~ (shipped in 0.3.0)
 - [x] ~~Usage alerts~~ (shipped in 0.2.0)
 - [ ] **Webhook sink**: Slack, Discord and plain JSON, with the URL kept as a sensitive setting. Slack text is escaped and Discord mentions are disabled, so a folder or branch name can't ping anyone.
 - [ ] **Team policy file**: a committed `.claude/notify.toml` that shares **rules** only (events, delays, which sinks), never destinations or URLs, so every teammate keeps their own channels. Same model as herdr-notify-router's `.herdr/notify.toml`.
 
 **Backlog**
-- [ ] Tell two sessions in the same folder apart (a short session label in the title).
-- [ ] A different sound per event (`done`, `blocked`, `error`), and a way to turn the chime off per event.
 - [ ] Desktop notifications and the chime on Linux and Windows (today macOS only).
 - [ ] Rules per event instead of one global set, for example `blocked` to your phone only and `done` to your desktop only. Needs a config file read through the plugin's file access, because plugin settings are flat.
 - [ ] Remember a pending `blocked` alert and dedupe state across a reload or restart (today they live in memory).

@@ -1,5 +1,5 @@
 import { test, expect, mock } from 'claude-code/testing'
-import { formatReset, inQuietHours, parseThresholds, thresholdAlert } from './register'
+import { formatReset, inList, inQuietHours, parseThresholds, thresholdAlert } from './register'
 
 const at = (h: number, m = 0) => new Date(2026, 0, 1, h, m).getTime() // local time
 const done = (secs: number, over: object = {}) => ({ answer: 'ok', durationMs: secs * 1000, isAborted: false, turnId: 't', reason: 'answer', ...over }) as never
@@ -8,11 +8,11 @@ const OFF = { desktop: false, chime: false, ntfyTopic: '' }
 
 // Stands in for the engine: records osascript runs and ntfy posts.
 function engine(on: any, now = at(12), withClock = true, cwd = '/Users/x/my-proj') {
-  const seen = { chimes: 0, desktop: [] as string[][], ntfy: [] as { url: string; init: any }[] }
+  const seen = { chimes: 0, sounds: [] as string[], desktop: [] as string[][], ntfy: [] as { url: string; init: any }[] }
   if (withClock) on('clock.now', () => ({ value: now }))
   on('process.run', (_$: any, e: any) => { seen.desktop.push([...e.argv]); return { value: { exitCode: 0, stdout: '', stderr: '' } } })
   on('http.fetch', (_$: any, e: any) => { seen.ntfy.push({ url: e.url, init: e.init }); return { value: { status: 200, ok: true, headers: {}, text: '' } } })
-  on('audio.play', () => { seen.chimes++ })
+  on('audio.play', (_$: any, e: any) => { seen.chimes++; seen.sounds.push(e.clip?.asset ?? e.asset) })
   on('session.cwd', () => ({ value: cwd }))
   on('turn.complete', (_$: any, e: any) => ({ text: e.answer }))
   on('classic.Notification', () => ({}))
@@ -245,4 +245,62 @@ test('usage: quiet hours drop it, and the chime stays silent', { options: { quie
   await $.session.measure(ctx(99)); await settle()
   expect(seen.desktop.length).toBe(0)
   expect(seen.chimes).toBe(0)
+})
+
+// ---- 0.3.0: per-event sounds, session label
+test('inList: comma-separated names, spaces ignored, whole words only', () => {
+  expect(inList('done, error', 'error')).toBe(true)
+  expect(inList('done,error', 'err')).toBe(false)
+  expect(inList('', 'done')).toBe(false)
+})
+
+test('each event plays its own sound', async ($, on) => {
+  const seen = engine(on)
+  await $.turn.complete(done(30))
+  await settle()
+  await $.turn.complete(done(30, { reason: 'error' }))
+  await settle()
+  expect(seen.sounds).toEqual(['sounds/done.wav', 'sounds/error.wav'])
+})
+
+test('blocked plays the blocked sound', { options: { blockedAfterSeconds: 0 } }, async ($, on) => {
+  const seen = engine(on)
+  await $.classic.Notification({ notification_type: 'permission_prompt', message: 'Allow Bash?' } as never)
+  await settle()
+  expect(seen.sounds).toEqual(['sounds/blocked.wav'])
+})
+
+test('chimeOn silences the chime for the events left out, the notification still goes', { options: { chimeOn: 'error' } }, async ($, on) => {
+  const seen = engine(on)
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.chimes).toBe(0)
+  expect(seen.desktop.length).toBe(1)
+  await $.turn.complete(done(30, { reason: 'error' }))
+  await settle()
+  expect(seen.sounds).toEqual(['sounds/error.wav'])
+})
+
+test('sessionLabel adds the first four characters of the session id to the title', { options: { sessionLabel: true } }, async ($, on) => {
+  const seen = engine(on)
+  on('session.id', () => ({ value: 'a1b2c3d4-0000-4000-8000-000000000000' }))
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj #a1b2')
+})
+
+test('sessionLabel without the folder', { options: { sessionLabel: true, includeFolder: false } }, async ($, on) => {
+  const seen = engine(on)
+  on('session.id', () => ({ value: 'a1b2c3d4-0000-4000-8000-000000000000' }))
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code #a1b2')
+})
+
+test('no sessionLabel by default', async ($, on) => {
+  const seen = engine(on)
+  on('session.id', () => ({ value: 'a1b2c3d4-0000-4000-8000-000000000000' }))
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
 })

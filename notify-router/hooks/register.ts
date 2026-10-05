@@ -4,7 +4,13 @@ type Kind = 'done' | 'blocked' | 'error' | 'usage'
 
 const NTFY_TAG: Record<Kind, string> = { done: 'white_check_mark', blocked: 'warning', error: 'x', usage: 'bar_chart' }
 
+// one clip per event; a usage warning sounds like `blocked` (it wants your attention too)
+const SOUND: Record<Kind, string> = { done: 'sounds/done.wav', blocked: 'sounds/blocked.wav', error: 'sounds/error.wav', usage: 'sounds/blocked.wav' }
+
 const WINDOW_LABEL: Record<string, string> = { five_hour: '5-hour limit', seven_day: '7-day limit', spend_limit: 'Spend limit' }
+
+// The list settings (notifyOn, chimeOn) are comma-separated event names: "done, error" has "error".
+export const inList = (spec: unknown, kind: string): boolean => String(spec).split(',').some(s => s.trim() === kind)
 
 // "80,95" -> [80, 95]; ignores anything that is not a percentage.
 export function parseThresholds(spec: string): number[] {
@@ -41,7 +47,7 @@ export function inQuietHours(spec: string, minutes: number): boolean {
 // ponytail: in-memory dedupe, resets on reload; one alert at a time per sink, sinks run in parallel.
 async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, number>, kind: Kind, message: string, key: string = kind) {
   try {
-    if (!String(o.notifyOn).split(',').map(s => s.trim()).includes(kind)) return
+    if (!inList(o.notifyOn, kind)) return
     const now = await $.clock.now()
     const d = new Date(now)
     if (inQuietHours(String(o.quietHours), d.getHours() * 60 + d.getMinutes())) return
@@ -52,7 +58,9 @@ async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, n
     const text = message.slice(0, 200)
     // which session is asking: the folder it runs in
     const folder = o.includeFolder ? (await $.session.cwd().catch(() => '')).split(/[\\/]/).filter(Boolean).pop() : undefined
-    const title = folder ? `Claude Code: ${folder}` : 'Claude Code'
+    // two sessions in one folder: the first characters of the session id tell them apart
+    const label = o.sessionLabel ? (await $.session.id().catch(() => '')).slice(0, 4) : ''
+    const title = `Claude Code${folder ? `: ${folder}` : ''}${label ? ` #${label}` : ''}`
     const sinks: [string, Promise<unknown>][] = []
 
     // argv form: the text never enters the AppleScript source, so quotes can't break or inject.
@@ -60,8 +68,8 @@ async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, n
     if (o.desktop) {
       sinks.push(['desktop', $.process.run(['osascript', '-e', 'on run argv', '-e', 'display notification (item 1 of argv) with title (item 2 of argv)', '-e', 'end run', text, title])])
     }
-    // ponytail: one sound for every event; macOS only (afplay), elsewhere the clip is skipped
-    if (o.chime) sinks.push(['chime', $.audio.play({ asset: 'sounds/done.wav' })])
+    // ponytail: macOS only (afplay), elsewhere the clip is skipped
+    if (o.chime && inList(o.chimeOn, kind)) sinks.push(['chime', $.audio.play({ asset: SOUND[kind] })])
     if (o.ntfyTopic) {
       const server = String(o.ntfyServer).replace(/\/+$/, '')
       const headers: Record<string, string> = { Title: title.replace(/[^\x20-\x7E]/g, '?'), Tags: NTFY_TAG[kind], Priority: kind === 'done' ? 'default' : 'high' }

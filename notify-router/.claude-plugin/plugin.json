@@ -1,6 +1,6 @@
 {
   "name": "notify-router",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Rules for Claude Code alerts: when one is worth sending (done, blocked, error, usage limits) and where it goes (chime, macOS notification, ntfy).",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
@@ -51,6 +51,12 @@
       "description": "Puts the session's folder name in the alert title so you can tell which session needs you. The name is sent to every sink, ntfy.sh included.",
       "default": true
     },
+    "sessionLabel": {
+      "type": "boolean",
+      "title": "Add a short session label to the title",
+      "description": "Adds the first 4 characters of the session id (Claude Code: my-project #a1b2) so two sessions in the same folder can be told apart. Sent to every sink, ntfy.sh included.",
+      "default": false
+    },
     "desktop": {
       "type": "boolean",
       "title": "macOS desktop notification",
@@ -62,6 +68,12 @@
       "title": "Play a chime",
       "description": "Play a short sound with each alert (macOS only). Quiet hours, dedupe and the event filter apply.",
       "default": true
+    },
+    "chimeOn": {
+      "type": "string",
+      "title": "Events that play the chime",
+      "description": "Comma-separated: done, blocked, error, usage. Each event has its own sound. Only applies while the chime is on.",
+      "default": "done,blocked,error,usage"
     },
     "ntfyTopic": {
       "type": "string",

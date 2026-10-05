@@ -4,6 +4,11 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## notify-router
 
+### 0.3.0
+- New `sessionLabel` setting (default off): adds the first 4 characters of the session id to the alert title (`Claude Code: my-project #a1b2`), to tell two sessions in the same folder apart.
+- A different sound per event: `done` keeps its chime, `blocked` and `usage` get three quick beeps, `error` a falling low tone.
+- New `chimeOn` setting (default all four events): leave an event out to keep its notification but not its sound.
+
 ### 0.2.0
 - Usage alerts: an alert when the context window, or a rate-limit window (5-hour, 7-day), crosses a threshold, with the time the window resets. New `usageThresholds` setting (default `80,95`, empty = off); `usage` is now part of the default `notifyOn`. Each threshold alerts once per metric and re-arms after the metric drops.
 
