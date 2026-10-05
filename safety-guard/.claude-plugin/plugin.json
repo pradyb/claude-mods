@@ -1,0 +1,8 @@
+{
+  "name": "safety-guard",
+  "version": "0.1.0",
+  "description": "Blocks destructive shell commands and access to secret files (.env, SSH keys, cloud credentials).",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  }
+}

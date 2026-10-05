@@ -1,0 +1,15 @@
+{
+  "name": "claude-mods",
+  "owner": {
+    "name": "Pradeep Kumar Balakrishnan",
+    "email": "pradeep.devlabs@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "safety-guard",
+      "source": "./safety-guard",
+      "description": "Blocks destructive shell commands and access to secret files (.env, SSH keys, cloud credentials)."
+    }
+  ],
+  "description": "Mods (plugins) for Claude Code."
+}
