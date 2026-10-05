@@ -17,11 +17,12 @@ Or in one step, from a session: `/plugin install secret-scrub --marketplace prad
 
 ## What it catches
 
-Well-known credential formats, each with a fixed prefix so a match is almost never a false alarm:
+Well-known credential formats, each with a fixed prefix (or, for the AWS secret key, a fixed name in front) so a match is almost never a false alarm:
 
 | Kind | Looks like |
 |---|---|
 | AWS access key | `AKIA...` or `ASIA...` plus 16 characters |
+| AWS secret access key | 40 characters right after `AWS_SECRET_ACCESS_KEY`, `AWS_SECRET_KEY`, `aws_secret_access_key` or `SecretAccessKey` (then `=` or `:`, optionally quoted). The name stays, only the value is masked |
 | GitHub token | `ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_`, and `github_pat_...` |
 | GitLab token | `glpat-` (personal, project and group access tokens), `gldt-`, `glrt-`, `glptt-`, `glft-`, `glcbt-`, `glimt-`, `glagent-`, `glwt-`, `glsoat-`, `glffct-`, `gloas-`, with a body of 20+ characters |
 | Anthropic API key | `sk-ant-...` |
@@ -44,6 +45,7 @@ Every prompt is checked, whatever its source (typed, sent from a phone, a notifi
 ## Limits
 
 - **Known formats only.** It will not catch a password, a database URL with credentials, a generic `secret=` value or a token from a provider not in the table. There is no entropy guessing, on purpose: it would flag ordinary text. If a format you use is missing, open an issue or a pull request with the pattern and a test.
+- **The AWS secret key needs its name.** It has no prefix, so a bare 40-character string is never touched. A key pasted without `AWS_SECRET_ACCESS_KEY=` (or similar) in front, or after a space instead of `=` or `:`, is not caught.
 - **Prompts only.** It does not look at file contents Claude reads or at command output. For secret files, use safety-guard.
 - **It is a safety net, not data-loss prevention.** If you must keep a secret out of the conversation, do not paste it in the first place.
 - A key that was already sent in an earlier session, or that you typed before installing, has already left your machine: rotate it.

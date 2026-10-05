@@ -1,6 +1,6 @@
 {
   "name": "secret-scrub",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Catches API keys, tokens and private keys in the prompt you are about to send, and masks or blocks them before they reach the model.",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"

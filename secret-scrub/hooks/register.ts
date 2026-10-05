@@ -6,6 +6,9 @@ import type { Register } from 'claude-code'
 const PATTERNS: [kind: string, re: RegExp][] = [
   ['private key', /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)/g],
   ['AWS access key', /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g],
+  // AWS secret access key: 40 characters with no prefix, so it is only matched right after its name (`AWS_SECRET_ACCESS_KEY=`, `"SecretAccessKey": "`, ...).
+  // The lookbehind keeps the name and masks just the value.
+  ['AWS secret access key', /(?<=(?:aws[_-]?secret[_-]?(?:access[_-]?)?key|secret[_-]?access[_-]?key)["']?[ \t]*[:=][ \t]*["']?)[A-Za-z0-9/+]{40}(?![A-Za-z0-9/+])/gi],
   ['GitHub token', /\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{50,})\b/g],
   // GitLab: personal/project/group access tokens (glpat), deploy, runner, CI job, trigger, feed, mail, agent, workspace, SCIM, feature-flag and OAuth secrets.
   // The body is 20+ characters; the lookahead lets a newer token contain dots without swallowing a sentence's final full stop.

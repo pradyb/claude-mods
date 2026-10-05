@@ -5,6 +5,7 @@ import { scrub } from './register'
 // (GitHub push protection and other scanners would flag it).
 const fake = {
   aws: 'AKIA' + 'IOSFODNN7EXAMPLE',
+  awsSecret: 'wJalrXUtnFEMI/K7MDENG/' + 'bPxRfiCY' + 'EXAMPLEKEY',
   github: 'ghp_' + 'a1B2'.repeat(9),
   githubPat: 'github_pat_' + 'x'.repeat(60),
   gitlab: 'glpat-' + 'x'.repeat(20),
@@ -130,5 +131,41 @@ test('a notification or schedule is masked too, but never dropped, even in block
     const r = await $.prompt.submit({ text: `build log ${fake.github}`, origin: { kind } } as never)
     expect(r.drop, kind).toBeUndefined()
     expect(r.text, kind).toBe('build log [REDACTED: GitHub token]')
+  }
+})
+
+test('an AWS secret access key is masked next to its name, and the name stays', () => {
+  expect(fake.awsSecret).toHaveLength(40)
+  const cases: [string, string][] = [
+    [`export AWS_SECRET_ACCESS_KEY=${fake.awsSecret}`, 'export AWS_SECRET_ACCESS_KEY=[REDACTED: AWS secret access key]'],
+    [`aws_secret_access_key = ${fake.awsSecret}`, 'aws_secret_access_key = [REDACTED: AWS secret access key]'],
+    [`AWS_SECRET_KEY: "${fake.awsSecret}"`, 'AWS_SECRET_KEY: "[REDACTED: AWS secret access key]"'],
+    [`"SecretAccessKey": "${fake.awsSecret}",`, '"SecretAccessKey": "[REDACTED: AWS secret access key]",'],
+    [`secretAccessKey: '${fake.awsSecret}'`, `secretAccessKey: '[REDACTED: AWS secret access key]'`],
+  ]
+  for (const [input, masked] of cases) {
+    const r = scrub(input)
+    expect(r.kinds, input).toEqual(['AWS secret access key'])
+    expect(r.text, input).toBe(masked)
+  }
+})
+
+test('both halves of an AWS key pair are masked', () => {
+  const r = scrub(`AWS_ACCESS_KEY_ID=${fake.aws}\nAWS_SECRET_ACCESS_KEY=${fake.awsSecret}`)
+  expect(r.kinds).toEqual(['AWS access key', 'AWS secret access key'])
+  expect(r.text).toBe('AWS_ACCESS_KEY_ID=[REDACTED: AWS access key]\nAWS_SECRET_ACCESS_KEY=[REDACTED: AWS secret access key]')
+})
+
+test('a 40-character string is left alone unless it follows an AWS secret key name', () => {
+  for (const t of [
+    fake.awsSecret,
+    `commit ${'a1b2c3d4e5'.repeat(4)} fixed it`,
+    `SECRET_KEY = '${fake.awsSecret}'`,
+    `AWS_SECRET_ACCESS_KEY=${fake.awsSecret}x`,
+    'AWS_SECRET_ACCESS_KEY=short',
+    'AWS_SECRET_ACCESS_KEY=$AWS_SECRET',
+  ]) {
+    expect(scrub(t).kinds, t).toEqual([])
+    expect(scrub(t).text, t).toBe(t)
   }
 })
