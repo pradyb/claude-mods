@@ -23,6 +23,7 @@ Well-known credential formats, each with a fixed prefix so a match is almost nev
 |---|---|
 | AWS access key | `AKIA...` or `ASIA...` plus 16 characters |
 | GitHub token | `ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_`, and `github_pat_...` |
+| GitLab token | `glpat-` (personal, project and group access tokens), `gldt-`, `glrt-`, `glptt-`, `glft-`, `glcbt-`, `glimt-`, `glagent-`, `glwt-`, `glsoat-`, `glffct-`, `gloas-`, with a body of 20+ characters |
 | Anthropic API key | `sk-ant-...` |
 | OpenAI-style API key | `sk-...` or `sk-proj-...`, 32+ characters |
 | Slack token | `xoxb-`, `xoxp-`, `xoxa-`, `xoxr-`, `xoxs-` |

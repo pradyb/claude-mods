@@ -7,6 +7,9 @@ const PATTERNS: [kind: string, re: RegExp][] = [
   ['private key', /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)/g],
   ['AWS access key', /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g],
   ['GitHub token', /\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{50,})\b/g],
+  // GitLab: personal/project/group access tokens (glpat), deploy, runner, CI job, trigger, feed, mail, agent, workspace, SCIM, feature-flag and OAuth secrets.
+  // The body is 20+ characters; the lookahead lets a newer token contain dots without swallowing a sentence's final full stop.
+  ['GitLab token', /\bgl(?:pat|oas|dt|rtr?|cbt|ptt|ft|imt|agent|wt|soat|ffct)-(?=[A-Za-z0-9_.-]{20,})[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*/g],
   ['Anthropic API key', /\bsk-ant-[A-Za-z0-9_-]{20,}/g],
   ['OpenAI API key', /\bsk-(?:proj-)?[A-Za-z0-9_-]{32,}/g],
   ['Slack token', /\bxox[baprs]-[A-Za-z0-9-]{10,}/g],

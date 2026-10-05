@@ -7,6 +7,9 @@ const fake = {
   aws: 'AKIA' + 'IOSFODNN7EXAMPLE',
   github: 'ghp_' + 'a1B2'.repeat(9),
   githubPat: 'github_pat_' + 'x'.repeat(60),
+  gitlab: 'glpat-' + 'x'.repeat(20),
+  gitlabRoutable: 'glpat-' + 'a1'.repeat(10) + '.01.' + 'b2'.repeat(8),
+  gitlabDeploy: 'gldt-' + 'd'.repeat(24),
   anthropic: 'sk-ant-' + 'api03-' + 'q'.repeat(40),
   openai: 'sk-' + 'proj-' + 'Z9'.repeat(20),
   slack: 'xoxb-' + '1234567890-' + 'abcdefghij',
@@ -21,6 +24,9 @@ test('masks each known format and names the kind', () => {
     [fake.aws, 'AWS access key'],
     [fake.github, 'GitHub token'],
     [fake.githubPat, 'GitHub token'],
+    [fake.gitlab, 'GitLab token'],
+    [fake.gitlabRoutable, 'GitLab token'],
+    [fake.gitlabDeploy, 'GitLab token'],
     [fake.anthropic, 'Anthropic API key'],
     [fake.openai, 'OpenAI API key'],
     [fake.slack, 'Slack token'],
@@ -51,11 +57,17 @@ test('several secrets, each kind listed once', () => {
   expect(r.text).not.toContain('ghp_')
 })
 
+test('a GitLab token at the end of a sentence keeps the full stop', () => {
+  expect(scrub(`my token is ${fake.gitlabRoutable}.`).text).toBe('my token is [REDACTED: GitLab token].')
+  expect(scrub(`(${fake.gitlab})`).text).toBe('([REDACTED: GitLab token])')
+})
+
 test('leaves ordinary text alone', () => {
   for (const t of [
     'please fix the failing test in sk-learn style pipelines',
     'the task-based risk-assessment-framework-for-everything-in-our-org-docs is long',
     'AKIA is a prefix, and ghp_ too, but these are short',
+    'glpat- is the prefix, glpat-short is too short, and glab-like-words are not tokens',
     'export const key = process.env.OPENAI_API_KEY',
     'see -----BEGIN CERTIFICATE----- blocks (public, not a private key)',
     '',
