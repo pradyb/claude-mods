@@ -373,3 +373,11 @@ test('webhook: off when no URL is set', async ($, on) => {
   await settle()
   expect(seen.ntfy.length).toBe(0)
 })
+
+test('webhook: format off keeps the URL but sends nothing, the other sinks still fire', { options: { webhookUrl: SLACK, webhookFormat: 'off' } }, async ($, on) => {
+  const seen = engine(on)
+  await $.turn.complete(done(42))
+  await settle()
+  expect(seen.ntfy.length).toBe(0)
+  expect(seen.desktop.length).toBe(1)
+})

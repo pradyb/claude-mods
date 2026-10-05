@@ -39,7 +39,7 @@ Set these with `/plugin configure notify-router`, then run `/reload-plugins`. Se
 | `ntfyServer` | `https://ntfy.sh` | Base URL of your ntfy server |
 | `ntfyToken` | empty | Access token for a protected topic. Stored as a sensitive value |
 | `webhookUrl` | empty | Post alerts to this Slack or Discord incoming webhook, or any URL that takes a JSON POST; empty = off. Stored as a sensitive value |
-| `webhookFormat` | `auto` | `auto` picks Slack or Discord from the URL and otherwise sends JSON. Set `slack`, `discord` or `json` to force one |
+| `webhookFormat` | `auto` | `auto` picks Slack or Discord from the URL and otherwise sends JSON. Set `slack`, `discord` or `json` to force one, or `off` to keep the URL saved but send nothing |
 
 Each event has its own sound: `done` a rising chime, `blocked` three quick beeps, `error` a falling low tone. `usage` uses the `blocked` sound.
 
@@ -79,7 +79,7 @@ With no `ntfyTopic` set, nothing is sent to ntfy: only the macOS notification an
 
 ## Slack, Discord and other webhooks
 
-Set `webhookUrl` with `/plugin configure notify-router`, then run `/reload-plugins`. The same rules apply as for every sink: `notifyOn`, quiet hours and dedupe.
+Set `webhookUrl` with `/plugin configure notify-router`, then run `/reload-plugins`. To pause it without losing the URL, set `webhookFormat` to `off`. The same rules apply as for every sink: `notifyOn`, quiet hours and dedupe.
 
 - **Slack:** create an app with an incoming webhook for the channel you want, and paste its `https://hooks.slack.com/services/...` URL. The message is `*Claude Code: my-project*` and the status line. Text is escaped, so a folder name or message containing `<!channel>` or `<@U123>` shows as plain text and pings no one.
 - **Discord:** in the channel's settings, under Integrations, create a webhook and paste its `https://discord.com/api/webhooks/...` URL. Mentions are switched off for the message, so `@everyone` in a name can't ping anyone.

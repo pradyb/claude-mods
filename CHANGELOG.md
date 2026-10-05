@@ -4,6 +4,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## notify-router
 
+### 0.4.1
+- `webhookFormat` accepts `off`: keeps the saved webhook URL but sends nothing.
+
 ### 0.4.0
 - Webhook sink: post alerts to a Slack or Discord incoming webhook, or any URL that takes a JSON POST. New `webhookUrl` (sensitive) and `webhookFormat` (`auto`, `slack`, `discord`, `json`) settings; `auto` picks the format from the URL's host. Slack text is escaped and Discord mentions are disabled, so a folder name or message can't ping anyone. The same event filter, quiet hours and dedupe apply.
 

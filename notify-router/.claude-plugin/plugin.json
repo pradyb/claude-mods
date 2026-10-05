@@ -1,6 +1,6 @@
 {
   "name": "notify-router",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Rules for Claude Code alerts: when one is worth sending (done, blocked, error, usage limits) and where it goes (chime, macOS notification, ntfy, Slack, Discord or a JSON webhook).",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
@@ -105,12 +105,13 @@
     "webhookFormat": {
       "type": "string",
       "title": "Webhook format",
-      "description": "auto picks Slack or Discord from the URL, otherwise plain JSON ({event, title, message, at}).",
+      "description": "auto picks Slack or Discord from the URL, otherwise plain JSON ({event, title, message, at}). off keeps the URL but sends nothing.",
       "options": [
         "auto",
         "slack",
         "discord",
-        "json"
+        "json",
+        "off"
       ],
       "default": "auto"
     }

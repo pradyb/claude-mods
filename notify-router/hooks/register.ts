@@ -99,7 +99,7 @@ async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, n
       sinks.push(['ntfy', $.http.fetch(`${server}/${encodeURIComponent(String(o.ntfyTopic))}`, { method: 'POST', headers, body: text })])
     }
 
-    if (o.webhookUrl) {
+    if (o.webhookUrl && o.webhookFormat !== 'off') {
       const url = String(o.webhookUrl)
       if (/^https?:\/\//i.test(url)) {
         const body = webhookBody(webhookFormat(url, o.webhookFormat), { kind, title, text, at: d.toISOString() })
