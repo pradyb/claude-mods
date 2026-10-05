@@ -29,3 +29,11 @@ claude plugin test <mod>
 ```
 
 The mod API is early access and may change between Claude Code releases.
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately, as described in [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE)

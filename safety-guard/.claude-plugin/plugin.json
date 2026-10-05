@@ -4,5 +4,8 @@
   "description": "Blocks destructive shell commands and access to secret files (.env, SSH keys, cloud credentials).",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
-  }
+  },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/safety-guard",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT"
 }

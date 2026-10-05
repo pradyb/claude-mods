@@ -1,0 +1,7 @@
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/pradyb/claude-mods/discussions/categories/q-a
+    about: Ask how to set up a mod or write its settings.
+  - name: Ideas and feedback
+    url: https://github.com/pradyb/claude-mods/discussions/categories/ideas
+    about: Float an idea before opening a feature request.

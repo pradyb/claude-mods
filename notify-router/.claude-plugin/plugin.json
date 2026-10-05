@@ -5,6 +5,9 @@
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
   },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/notify-router",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT",
   "userConfig": {
     "notifyOn": {
       "type": "string",

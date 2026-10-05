@@ -1,0 +1,18 @@
+# Normalize line endings: force LF so files never get CRLF when checked out
+# on Windows, and diffs stay clean across platforms.
+
+* text=auto eol=lf
+
+*.ts       text eol=lf
+*.tsx      text eol=lf
+*.json     text eol=lf
+*.md       text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+.gitignore text eol=lf
+
+# Never touch these.
+*.wav      binary
+*.png      binary
+*.jpg      binary
+*.gif      binary
