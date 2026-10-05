@@ -28,15 +28,17 @@ export function scrub(text: string): { text: string; kinds: string[] } {
   return { text: out, kinds }
 }
 
+// The user's own message: typed at the terminal (`composer`) or sent from a phone (`bridge`). No origin is treated the same way.
+// Anything else (a notification, a schedule, another session) is never dropped: it would vanish unseen, so it is masked instead.
+const isUsersOwn = (origin?: { kind: string }) => origin === undefined || origin.kind === 'composer' || origin.kind === 'bridge'
+
 export const register: Register = (on, options) => {
   on('prompt.submit', ($, e, next) => {
-    // only what the user typed or pasted: a notification or a scheduled prompt has an origin
-    if (e.origin !== undefined) return next(e)
     const { text, kinds } = scrub(e.text)
     if (!kinds.length) return next(e)
 
     const found = kinds.join(', ')
-    if (options.mode === 'block') {
+    if (options.mode === 'block' && isUsersOwn(e.origin)) {
       $.ui.toast(`secret-scrub: blocked a prompt containing ${found}`)
       return { drop: `secret-scrub: your prompt contains ${found}. Remove it and send again, or set mode to "mask".` }
     }

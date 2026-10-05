@@ -38,7 +38,7 @@ Set `mode` with `/plugin configure secret-scrub`, then run `/reload-plugins`.
 - **`mask`** (default): the secret is replaced with `[REDACTED: GitHub token]` and the prompt is sent. A toast tells you what was masked. The model never sees the secret, and your own screen still shows what you typed.
 - **`block`**: the prompt is refused, with the reason (the kind, never the secret), so you can remove it and send again.
 
-Only prompts you type or paste are checked. Prompts that come from a notification or a schedule are left alone.
+Every prompt is checked, whatever its source (typed, sent from a phone, a notification, a schedule or another session). In `block` mode only your own prompts are refused: anything else is masked instead, because a refused notification would vanish unseen.
 
 ## Limits
 

@@ -12,6 +12,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## secret-scrub
 
+### 0.1.1
+- Fix: prompts typed at the terminal were never scanned. The mod skipped every prompt that carried an origin, but Claude Code stamps the user's own Enter as `composer` (and a phone message as `bridge`). Every prompt is now scanned. In `block` mode only the user's own prompts are refused; a notification, schedule or message from another session is masked instead, since a refused one would vanish unseen.
+
 ### 0.1.0
 - Initial release: masks or blocks API keys, tokens and private keys (AWS, GitHub, Anthropic, OpenAI, Slack, Stripe, Google, npm, PEM private keys) in the prompt before it reaches the model. `mode` setting: `mask` (default) or `block`.
 

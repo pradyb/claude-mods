@@ -94,8 +94,29 @@ test('a clean prompt passes through untouched', async ($, on) => {
   expect(r.text).toBe('refactor the parser')
 })
 
-test('a prompt that did not come from the user is left alone', async ($, on) => {
+test('a prompt typed at the terminal (origin composer) is masked: the origin is set on real prompts', async ($, on) => {
   bottom(on)
-  const r = await $.prompt.submit({ text: `use ${fake.github}`, origin: { kind: 'task-notification' } } as never)
-  expect(r.text).toContain('ghp_')
+  const r = await $.prompt.submit({ text: `use ${fake.github}`, origin: { kind: 'composer' } } as never)
+  expect(r.text).toBe('use [REDACTED: GitHub token]')
+})
+
+test('a prompt sent from a phone (origin bridge) is masked', async ($, on) => {
+  bottom(on)
+  const r = await $.prompt.submit({ text: `use ${fake.github}`, origin: { kind: 'bridge' } } as never)
+  expect(r.text).toBe('use [REDACTED: GitHub token]')
+})
+
+test('block mode drops a typed prompt', { options: { mode: 'block' } }, async ($, on) => {
+  bottom(on)
+  const r = await $.prompt.submit({ text: `use ${fake.github}`, origin: { kind: 'composer' } } as never)
+  expect(r.drop).toContain('GitHub token')
+})
+
+test('a notification or schedule is masked too, but never dropped, even in block mode', { options: { mode: 'block' } }, async ($, on) => {
+  bottom(on)
+  for (const kind of ['task-notification', 'scheduled-trigger', 'peer', 'channel']) {
+    const r = await $.prompt.submit({ text: `build log ${fake.github}`, origin: { kind } } as never)
+    expect(r.drop, kind).toBeUndefined()
+    expect(r.text, kind).toBe('build log [REDACTED: GitHub token]')
+  }
 })
