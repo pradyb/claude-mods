@@ -1,0 +1,11 @@
+{
+  "name": "status-bar",
+  "version": "0.1.0",
+  "description": "A status bar above the prompt with folder, git branch, 5-hour and 7-day usage bars, context, cost, session time and turns. Desktop and VS Code only; the CLI keeps its own status line.",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/status-bar",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT"
+}
