@@ -25,7 +25,7 @@ Or in one step, from a session: `/plugin install status-bar --marketplace pradyb
 | `⎇` branch | The current git branch and its state (below); left out outside a repository. |
 | `5h`, `7d` | Rate-limit usage as a 4-cell bar, the percentage used and the time until the window resets: hours and minutes under a day, whole days after. Subscription accounts only, and only once a response has reported them. |
 | `ctx` | How full the context window is, and its size in tokens (`17% · 172k`). |
-| `cache` | Time left on the prompt cache after the last turn (`52m`), or `cold` once it has expired. Shown after the first turn. The 1-hour cache lifetime is assumed. |
+| `cache` | Time left on the prompt cache after the last turn (`52m`), or `cold` once it has expired. Shown after the first turn; subagent turns don't reset it. The lifetime is the `cacheTtlMinutes` setting (default 60; use 5 for the API default). |
 | `$` | What the session has cost so far. |
 | `⏱` | How long the session has run. |
 | `turns` | Turns taken so far. |
@@ -58,7 +58,7 @@ The bars and `ctx` change color with how much is used. They are theme colors, so
 | 50% to 79% | amber (`warning`) |
 | 80% or more | red (`error`) |
 
-`cache` uses the same colors by how much of its hour has gone, and `cold` is red.
+`cache` uses the same colors by how much of its lifetime has gone, and `cold` is red.
 
 ## Where it shows
 
@@ -70,4 +70,4 @@ It shares the band with other mods: what another mod draws there (such as [focus
 
 - The bar redraws when you send a prompt, when a turn ends, when usage is re-measured and every 30 seconds, so the clock, session time and cache countdown can be up to 30 seconds behind.
 - The CLI status line also has effort, output style, vim mode, agent, worktree and lines changed. Mods can't read those, so they are not shown.
-- No settings: the order, the 4-cell bars and the 50/80 cutoffs are fixed in `hooks/register.tsx`.
+- One setting, `cacheTtlMinutes`; the order, the 4-cell bars and the 50/80 cutoffs are fixed in `hooks/register.tsx`.

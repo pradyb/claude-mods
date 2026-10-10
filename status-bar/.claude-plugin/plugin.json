@@ -7,5 +7,13 @@
   },
   "homepage": "https://github.com/pradyb/claude-mods/tree/main/status-bar",
   "repository": "https://github.com/pradyb/claude-mods",
-  "license": "MIT"
+  "license": "MIT",
+  "userConfig": {
+    "cacheTtlMinutes": {
+      "type": "number",
+      "title": "Prompt-cache lifetime (minutes)",
+      "description": "How long the cache countdown runs after a turn. 60 for a subscription; 5 for the API default.",
+      "default": 60
+    }
+  }
 }

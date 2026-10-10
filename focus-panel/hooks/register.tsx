@@ -31,6 +31,8 @@ const ASK = /^\s*(?:[-*]\s*)?\**(?:please (?:confirm|choose|decide|review|approv
 const FAIL = /^\s*(?:[-*]\s*)?(?:\**(?:failed|failure|error)\**\s*:\s*|(?:❌|✗|✘|✖|🔴)\s*)(.+)$/iu
 const WARN = /^\s*(?:[-*]\s*)?(?:⚠️?|🟡)\s*(.+)$/u
 const BULLET = /^\s*(?:[-*•]|\d+[.)])\s+(?:\[([ xX])\]\s+)?(.+)$/
+const NOTHING = /^(?:none|nothing|n\/a|0)\.?$/i // "Failed: none" reports no failure
+const DONE = /\b(fix(ed|es)?|resolved|solved|addressed)\b/i // "Bugs fixed:" lists work that is done
 // "## Failures", "**Needs you:**", "Next steps:": a heading whose words say what the bullets under it are
 const HEAD = /^(?:#{1,6}\s+(.+?)\s*#*|\*\*(.{1,60}?)\*\*:?|(.{1,60}?):)\s*$/
 const HEAD_KIND: [Section, RegExp][] = [
@@ -59,7 +61,8 @@ export function extract(answer: string): Found {
     const n = NEXT.exec(line)
     if (n) {
       if (!f.next) {
-        const text = clean(n[1] || lines.slice(i + 1).find(l => l.trim()) || '')
+        const after = lines.slice(i + 1).find(l => l.trim()) ?? ''
+        const text = clean(n[1] || (BULLET.test(after) ? '' : after)) // bullets go through the section, which skips ticked boxes
         if (text) f.next = { text }
       }
       section = n[1] ? undefined : 'next'
@@ -68,7 +71,7 @@ export function extract(answer: string): Found {
     const h = HEADS.exec(line)
     if (h) return void f.heads.push({ text: clean(h[1]) })
     const x = FAIL.exec(line)
-    if (x) return void add('errors', x[1])
+    if (x) return NOTHING.test(x[1].trim()) ? undefined : add('errors', x[1])
     const w = WARN.exec(line)
     if (w) return void add('heads', w[1])
     const b = BULLET.exec(line)
@@ -77,7 +80,7 @@ export function extract(answer: string): Found {
     if (t) return void f.todos.push({ text: clean(t[1]) })
     if (b) return
     const head = HEAD.exec(line.trim())
-    section = head ? HEAD_KIND.find(([, re]) => re.test(head[1] ?? head[2] ?? head[3]))?.[0] : undefined // prose ends a section
+    section = head && !DONE.test(head[1] ?? head[2] ?? head[3]) ? HEAD_KIND.find(([, re]) => re.test(head[1] ?? head[2] ?? head[3]))?.[0] : undefined // prose ends a section
   })
   f.todos = f.todos.filter(t => t.text !== f.next?.text)
   const tail = lines.filter(l => l.trim()).slice(-14)

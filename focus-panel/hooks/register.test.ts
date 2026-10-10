@@ -22,8 +22,17 @@ test('extract: rules find each kind, skip code fences', () => {
   expect(r.needs.map(x => x.text)).toEqual(['Should I also bump the version?'])
 })
 
-test('extract: heading-style next takes the first list item under it', () => {
+test('extract: heading-style next takes the first list item under it, skipping ticked ones', () => {
   expect(extract('Next steps:\n\n- ship it\n- celebrate').next?.text).toBe('ship it')
+  expect(extract('Next steps:\n- [x] Add tests\n- Wire the config flag').next?.text).toBe('Wire the config flag')
+  expect(extract('Next steps:\nRun the full suite.').next?.text).toBe('Run the full suite.')
+})
+
+test('extract: fixed bugs and empty failure reports are not errors', () => {
+  expect(extract('I fixed the following bugs:\n- null deref in loader\n- off-by-one in pager').errors).toEqual([])
+  expect(extract('## Issues fixed\n- null deref in loader').errors).toEqual([])
+  expect(extract('Passed: all\nFailed: none\nError: n/a').errors).toEqual([])
+  expect(extract('### Bugs\n- null deref in loader').errors.map(x => x.text)).toEqual(['null deref in loader'])
 })
 
 test('extract: bullets take their kind from the heading above them; ticked boxes are skipped', () => {
