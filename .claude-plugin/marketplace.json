@@ -19,6 +19,11 @@
       "name": "notify-router",
       "source": "./notify-router",
       "description": "Rules for alerts: done, blocked (if still waiting), error and context or rate-limit usage, to a chime, macOS notifications and ntfy, with quiet hours and dedupe."
+    },
+    {
+      "name": "status-bar",
+      "source": "./status-bar",
+      "description": "A one-line status bar above the prompt: folder, git branch and state, 5-hour and 7-day usage bars, context, cost, session time and turns. Desktop app only."
     }
   ],
   "description": "Mods (plugins) for Claude Code."
