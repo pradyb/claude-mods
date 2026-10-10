@@ -1,11 +1,19 @@
 {
   "name": "status-bar",
-  "version": "0.1.1",
-  "description": "A status bar above the prompt with folder, git branch and state, 5-hour and 7-day usage bars, context, cost, session time and turns. Desktop app only; the CLI keeps its own status line.",
+  "version": "0.2.0",
+  "description": "A status bar above the prompt with folder, git branch and state, 5-hour and 7-day usage bars, context with tokens, prompt-cache countdown, cost, session time, turns and clock. Desktop app only; the CLI keeps its own status line.",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
   },
   "homepage": "https://github.com/pradyb/claude-mods/tree/main/status-bar",
   "repository": "https://github.com/pradyb/claude-mods",
-  "license": "MIT"
+  "license": "MIT",
+  "userConfig": {
+    "cacheTtlMinutes": {
+      "type": "number",
+      "title": "Prompt-cache lifetime (minutes)",
+      "description": "How long the cache countdown runs after a turn. 60 for a subscription; 5 for the API default.",
+      "default": 60
+    }
+  }
 }

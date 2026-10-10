@@ -26,17 +26,17 @@ Or in one step, from a session: `/plugin install focus-panel --marketplace prady
 
 ## What it shows
 
-Only the sections that have something; with nothing to show there is no panel. Each section has its own color and text style.
+Only the sections that have something; with nothing to show there is no panel. Each section has its own color and text style, and the frame turns red when an error is shown, or amber when a question is waiting on you.
 
 | Section | Style | Where it comes from |
 |---|---|---|
-| **NEEDS YOU** | bold | Questions and lines such as "please confirm" or "let me know" near the end of the response |
-| **ERROR** | red text | Tool calls that failed this turn, and a turn that ended on an API error or a refusal |
-| **NEXT** | bold, with a task id | A "Next:" or "Next step:" line; else the in-progress (or first unblocked) task from Claude's task list, with its id (`#3`) |
-| **TO-DO** | `○` marker | Unchecked `- [ ]` items, "TODO:" lines, and the other open tasks with their ids |
-| **HEADS-UP** | italic | "Note:", "Warning:", "Important:", "Risk:" and similar lines |
+| **NEEDS YOU** | bold | Questions and lines such as "please confirm" or "let me know" near the end of the response; bullets under a "Needs you" or "Decisions" heading |
+| **ERROR** | red text | Tool calls that failed this turn, and a turn that ended on an API error or a refusal; "Failed:" / "Error:" lines, ❌ lines, and bullets under a "Failures" or "Issues" heading |
+| **NEXT** | bold, with a task id | A "Next:" or "Next step:" line, or the first bullet under a "Next steps" heading; else the in-progress (or first unblocked) task from Claude's task list, with its id (`#3`) |
+| **TO-DO** | `○` marker | Unchecked `- [ ]` items, "TODO:" lines, the other bullets under a "Next steps" or "To-do" heading, and the other open tasks with their ids |
+| **HEADS-UP** | italic | "Note:", "Warning:", "Important:", "Risk:" and similar lines, ⚠ lines, and bullets under a "Warnings" or "Risks" heading |
 
-Code blocks in the response are ignored. Each section shows up to 3 items (2 in the terminal), with `+n` for the rest; on a short window whole sections are dropped from the bottom up.
+Code blocks in the response are ignored, and so are ticked `- [x]` items. A heading is a `#` line, a bold line or a line ending in a colon; a line of plain text ends its list. Each section shows up to 3 items (2 in the terminal), with `+n` for the rest; on a short window whole sections are dropped from the bottom up.
 
 ## Buttons
 
@@ -65,6 +65,6 @@ The desktop app and the terminal. It draws in the band above the prompt, with a 
 ## Limits
 
 - The rules read common wording, not meaning: a question phrased without a `?`, or a "next step" in a sentence, is missed unless Haiku catches it.
-- The five hues are fixed (muted ochre, brick, sage, slate and clay), tuned for dark themes and a little pale on light ones. The frame and normal text follow your theme.
+- The colors are theme colors (`warning`, `error`, `success`, `subtle`, `suggestion`), so they follow your Claude Code theme and are not configurable here.
 - Task ids come from the task tools the model called in this session; tasks created before the mod loaded are picked up once Claude lists them.
 - Haiku costs a few hundred tokens per long response; turn `useModel` off to avoid it.

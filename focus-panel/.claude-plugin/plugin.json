@@ -1,6 +1,6 @@
 {
   "name": "focus-panel",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "After each response, a panel above the prompt with what needs you, errors, the next action (with its task id), open to-dos and heads-ups.",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
