@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mod: [safety-guard, secret-scrub, notify-router, status-bar]
+        mod: [safety-guard, secret-scrub, notify-router, status-bar, focus-panel]
 
     steps:
       - name: Checkout code

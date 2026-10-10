@@ -2,6 +2,11 @@
 
 Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`) and tagged `<mod>--vX.Y.Z`. The first releases of `safety-guard` and `notify-router` carry the older `<mod>-vX.Y.Z` tags.
 
+## focus-panel
+
+### 0.1.0
+- Initial release: after each response, a panel above the prompt with NEEDS YOU, ERROR, NEXT (with task id), TO-DO and HEADS-UP, found by plain rules and, for long responses, one Haiku call. `Run it` sends the next action as a prompt; `Dismiss` clears the panel. Settings `useModel` and `modelMinChars`.
+
 ## status-bar
 
 ### 0.1.0

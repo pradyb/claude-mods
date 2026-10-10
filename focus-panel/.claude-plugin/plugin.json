@@ -1,0 +1,26 @@
+{
+  "name": "focus-panel",
+  "version": "0.1.0",
+  "description": "After each response, a panel above the prompt with what needs you, errors, the next action (with its task id), open to-dos and heads-ups.",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/focus-panel",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "useModel": {
+      "type": "boolean",
+      "title": "Read long responses with Haiku",
+      "description": "After a long response, one short Haiku call finds the items the plain rules miss. Costs a few hundred tokens per long response. Off = rules only.",
+      "default": true
+    },
+    "modelMinChars": {
+      "type": "number",
+      "title": "Haiku: minimum response length (characters)",
+      "description": "Only responses at least this long are sent to Haiku.",
+      "default": 800
+    }
+  }
+}
