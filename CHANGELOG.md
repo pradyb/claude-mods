@@ -9,6 +9,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## status-bar
 
+### 0.1.1
+- The items are spread over the full width of the bar, the first at the left edge and the last at the right, instead of bunched on the left.
+
 ### 0.1.0
 - Initial release: a one-line status bar above the prompt with folder, git branch and state (`+` staged, `~` changed, `?` untracked, `↑↓` ahead/behind), 5-hour and 7-day usage bars (green, amber, red by use), context, cost, session time and turns. Desktop app only.
 

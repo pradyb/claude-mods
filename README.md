@@ -19,7 +19,7 @@ A mod runs with your permissions, so read what it does first. `claude plugin val
 | [safety-guard](safety-guard) | 0.1.0 | Blocks destructive shell commands (`rm -rf /`, force push, `reset --hard`, `curl \| sh`, ...) and access to secret files (`.env`, SSH keys, cloud credentials). |
 | [secret-scrub](secret-scrub) | 0.1.2 | Catches API keys, tokens and private keys in the prompt you are about to send, and masks or blocks them before they reach the model. |
 | [notify-router](notify-router) | 0.4.1 | Rules for alerts: done, blocked (only if still waiting), error, and context or rate-limit usage, sent to a chime, macOS notifications, ntfy and Slack, Discord or JSON webhooks, with quiet hours and dedupe. |
-| [status-bar](status-bar) | 0.1.0 | A one-line status bar above the prompt: folder, git branch and state, 5-hour and 7-day usage bars, context, cost, session time and turns. Desktop app only; the CLI keeps its own status line. |
+| [status-bar](status-bar) | 0.1.1 | A one-line status bar above the prompt: folder, git branch and state, 5-hour and 7-day usage bars, context, cost, session time and turns. Desktop app only; the CLI keeps its own status line. |
 | [focus-panel](focus-panel) | 0.1.0 | A panel above the prompt after each response: what needs you, errors, the next action with its task id, open to-dos and heads-ups. Run it or dismiss it. |
 
 ## Versioning
