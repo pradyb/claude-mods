@@ -7,7 +7,7 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 ### 0.2.0
 - Colors are theme colors instead of fixed hues, so they follow your theme; the frame turns red when an error is shown and amber when a question is waiting on you.
 - Bullets are sorted by the heading above them: under "Failures" they are ERROR, under "Needs you" NEEDS YOU, under "Warnings" HEADS-UP, under "Next steps" NEXT (the first) and TO-DO (the rest), under "To-do" TO-DO. Ticked `- [x]` boxes under a heading are skipped.
-- `Failed:` / `Error:` lines and ❌ ✗ 🔴 lines are ERROR; ⚠ and 🟡 lines are HEADS-UP.
+- `Failed:` / `Error:` lines and ❌ ✗ 🔴 lines are ERROR; ⚠ and 🟡 lines are HEADS-UP. `Failed: none` and headings about fixed bugs ("Bugs fixed:") are not.
 
 ### 0.1.0
 - Initial release: after each response, a panel above the prompt with NEEDS YOU, ERROR, NEXT (with task id), TO-DO and HEADS-UP, found by plain rules and, for long responses, one Haiku call. `Run it` sends the next action as a prompt; `Dismiss` clears the panel. Settings `useModel` and `modelMinChars`.
@@ -15,9 +15,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 ## status-bar
 
 ### 0.2.0
-- New items: `cache` (time left on the 1-hour prompt cache after the last turn, `cold` once it has expired), the context size in tokens next to `ctx` (`17% · 172k`), and the clock time at the right edge.
+- New items: `cache` (time left on the prompt cache after the last main-thread turn, `cold` once it has expired; new `cacheTtlMinutes` setting, default 60, use 5 for the API default), the context size in tokens next to `ctx` (`17% · 172k`), and the clock time at the right edge.
 - Colors now change at 50% (amber) and 80% (red), the same cutoffs as the CLI status line; they were 70% and 90%.
-- The bar redraws every 30 seconds and when usage is re-measured, so the clock, session time and cache countdown keep moving between turns.
+- The bar redraws every 30 seconds (once it is drawn) and when usage is re-measured, so the clock, session time and cache countdown keep moving between turns.
 
 ### 0.1.1
 - The items are spread over the full width of the bar, the first at the left edge and the last at the right, instead of bunched on the left.
