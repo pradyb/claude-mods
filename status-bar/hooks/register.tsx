@@ -6,15 +6,17 @@ export type Facts = {
   cwd: string
   git?: Git
   contextPercent?: number
+  contextTokens?: number
   costUsd?: number
   elapsedMs: number
   turns: number
+  lastTurnAt?: number
   rateLimits: { kind: string; percentUsed: number; resetsAt?: string }[]
   now: number
 }
 
-// Theme keys, so the bar follows the person's theme.
-const level = (pct: number) => (pct >= 90 ? 'error' : pct >= 70 ? 'warning' : 'success')
+// Theme keys, so the bar follows the person's theme. Same cutoffs as the CLI status line.
+const level = (pct: number) => (pct >= 80 ? 'error' : pct >= 50 ? 'warning' : 'success')
 
 export function duration(ms: number): string {
   const m = Math.max(0, Math.floor(ms / 60000))
@@ -30,6 +32,9 @@ export function bar(pct: number, width = 4): [string, string] {
 export function resetIn(ms: number): string {
   return ms >= 86_400_000 ? `${Math.floor(ms / 86_400_000)}d` : duration(ms)
 }
+
+// ponytail: the 1h prompt-cache TTL is assumed; the CLI status line reads it per turn from the transcript
+const CACHE_TTL_MS = 3_600_000
 
 const LIMIT = { five_hour: '5h', seven_day: '7d', spend_limit: 'spend' } as Record<string, string>
 
@@ -70,22 +75,40 @@ export function segments(f: Facts): Seg[] {
     const left = r.resetsAt ? resetIn(Date.parse(r.resetsAt) - f.now) : ''
     out.push({ label: LIMIT[r.kind] ?? r.kind, bar: bar(r.percentUsed), text: `${Math.round(r.percentUsed)}%${left ? ` · ${left}` : ''}`, color: level(r.percentUsed) })
   }
-  if (f.contextPercent !== undefined) out.push({ label: 'ctx', text: `${f.contextPercent}%`, color: level(f.contextPercent) })
+  if (f.contextPercent !== undefined) {
+    const k = f.contextTokens ? ` · ${Math.floor(f.contextTokens / 1000)}k` : ''
+    out.push({ label: 'ctx', text: `${f.contextPercent}%${k}`, color: level(f.contextPercent) })
+  }
+  if (f.lastTurnAt !== undefined) {
+    const left = f.lastTurnAt + CACHE_TTL_MS - f.now
+    out.push(left > 0 ? { label: 'cache', text: duration(left), color: level(((CACHE_TTL_MS - left) * 100) / CACHE_TTL_MS) } : { label: 'cache', text: 'cold', color: 'error' })
+  }
   if (f.costUsd !== undefined) out.push({ label: '$', text: f.costUsd.toFixed(2), color: 'text' })
   out.push({ label: '⏱', text: duration(f.elapsedMs), color: 'text' })
   if (f.turns > 0) out.push({ label: 'turns', text: String(f.turns), color: 'text' })
+  out.push({ text: new Date(f.now).toTimeString().slice(0, 5), color: 'subtle' })
   return out
 }
 
 export const register: Register = on => {
   let git: { cwd: string; at: number; value?: Git } | undefined
+  let lastTurnAt: number | undefined
 
-  // Redraw when the figures change; the band is cached otherwise.
+  // Redraw when the figures change (and every 30s for the clock and cache countdown); the band is cached otherwise.
+  on('session.start', ($, e, next) => {
+    if (e.surface !== 'terminal') $.clock.every(30_000, () => $.ui.invalidate('ui.render'))
+    return next(e)
+  }).catch(($, e, next) => next(e))
+  on('session.measure', ($, e, next) => {
+    $.ui.invalidate('ui.render')
+    return next(e)
+  }).catch(($, e, next) => next(e))
   on('prompt.submit', ($, e, next) => {
     $.ui.invalidate('ui.render')
     return next(e)
   }).catch(($, e, next) => next(e)) // never block a prompt
-  on('turn.complete', ($, e, next) => {
+  on('turn.complete', async ($, e, next) => {
+    lastTurnAt = await $.clock.now()
     $.ui.invalidate('ui.render')
     return next(e)
   })
@@ -107,9 +130,11 @@ export const register: Register = on => {
       cwd,
       git: git.value,
       contextPercent: usage.context.percent,
+      contextTokens: usage.context.tokens,
       costUsd: usage.cost?.usd,
       elapsedMs: now - usage.startedAt,
       turns,
+      lastTurnAt,
       rateLimits: usage.rateLimits,
       now,
     })

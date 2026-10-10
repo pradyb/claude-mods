@@ -23,7 +23,7 @@
     {
       "name": "status-bar",
       "source": "./status-bar",
-      "description": "A one-line status bar above the prompt: folder, git branch and state, 5-hour and 7-day usage bars, context, cost, session time and turns. Desktop app only."
+      "description": "A one-line status bar above the prompt: folder, git branch and state, 5-hour and 7-day usage bars, context with tokens, prompt-cache countdown, cost, session time, turns and clock. Desktop app only."
     },
     {
       "name": "focus-panel",
