@@ -91,7 +91,7 @@ export const register: Register = on => {
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    // ponytail: terminal keeps the CLI's own status line; this band is for desktop and vscode.
+    // ponytail: terminal keeps the CLI's own status line; this band is for the desktop app.
     if (e.surface === 'terminal' || e.props.hasSurvey) return next(e)
 
     const [cwd, usage, turns, now] = await Promise.all([$.session.cwd(), $.session.usage(), $.session.turns(), $.clock.now()])
