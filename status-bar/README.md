@@ -58,7 +58,7 @@ The bars and `ctx` change color with how much is used. They are theme colors, so
 
 ## Where it shows
 
-The desktop app. On the terminal (CLI) the mod draws nothing, so your own status line is untouched. The bar sits in the band above the prompt: it stays on one line, and on a narrow window the last items are clipped. It steps aside while a survey uses that slot, and the engine's own `[-]` collapses it.
+The desktop app. On the terminal (CLI) the mod draws nothing, so your own status line is untouched. The bar sits in the band above the prompt: it stays on one line, spread over the full width, and on a narrow window the last items are clipped. It steps aside while a survey uses that slot, and the engine's own `[-]` collapses it.
 
 It shares the band with other mods: what another mod draws there (such as [focus-panel](../focus-panel)) is stacked above the bar.
 

@@ -114,9 +114,9 @@ export const register: Register = on => {
       now,
     })
 
-    // One line, full-size text, left-aligned with the prompt; on a narrow window the last items are clipped.
+    // One line, full-size text, spread over the full width (first item at the prompt's left edge, last at its right); on a narrow window the last items are clipped.
     const line = (
-      <Box flexDirection="row" height={1} overflow="hidden" columnGap={1}>
+      <Box flexDirection="row" height={1} overflow="hidden" columnGap={1} justifyContent="space-between">
         {segs.map((s, i) => (
           <Box key={String(i)} flexDirection="row" flexShrink={0} columnGap={1}>
             {s.label ? <Text color="subtle">{s.label}</Text> : null}
