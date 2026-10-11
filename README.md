@@ -8,9 +8,21 @@ Mods (plugins) for Claude Code. Requires Claude Code 2.1.287 or later (`claude -
 /plugin marketplace add pradyb/claude-mods
 ```
 
-Then install the mods you want, for example `/plugin install safety-guard@claude-mods`, or add the marketplace and install in one step with `/plugin install <mod> --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later). Each mod's README has its own install command and settings.
+Then install the mods you want, for example `/plugin install safety-guard@pradyb-mods`, or add the marketplace and install in one step with `/plugin install <mod> --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later). Each mod's README has its own install command and settings.
 
 A mod runs with your permissions, so read what it does first. `claude plugin validate <mod>` lists the events a mod handles and the calls it makes without running it.
+
+## Moved from `claude-mods`
+
+The marketplace is now named `pradyb-mods` (the repository is still `pradyb/claude-mods`), so its name can't clash with another marketplace called `claude-mods`. If you installed mods as `<mod>@claude-mods`, remove the old marketplace and install again:
+
+```
+/plugin marketplace remove claude-mods
+/plugin marketplace add pradyb/claude-mods
+/plugin install <mod>@pradyb-mods
+```
+
+Settings you made with `/plugin configure` are kept per plugin and may need to be entered again.
 
 ## Mods
 

@@ -19,7 +19,7 @@ Requires Claude Code 2.1.287 or later.
 
 ```
 /plugin marketplace add pradyb/claude-mods
-/plugin install focus-panel@claude-mods
+/plugin install focus-panel@pradyb-mods
 ```
 
 Or in one step, from a session: `/plugin install focus-panel --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later).
