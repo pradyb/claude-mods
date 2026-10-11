@@ -6,7 +6,7 @@ Blocks destructive shell commands and access to secret files before Claude Code 
 
 ```
 /plugin marketplace add pradyb/claude-mods
-/plugin install safety-guard@claude-mods
+/plugin install safety-guard@pradyb-mods
 ```
 
 Or in one step, from a session: `/plugin install safety-guard --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later).

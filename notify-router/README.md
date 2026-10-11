@@ -13,14 +13,14 @@ Inspired by [herdr-notify-router](https://github.com/pradyb/herdr-notify-router)
 
 ```
 /plugin marketplace add pradyb/claude-mods
-/plugin install notify-router@claude-mods
+/plugin install notify-router@pradyb-mods
 ```
 
 Or in one step, from a session: `/plugin install notify-router --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later).
 
 ## Settings
 
-Set these with `/plugin configure notify-router`, then run `/reload-plugins`. Sensitive settings (`ntfyTopic`, `ntfyToken`, `webhookUrl`) are kept in secure storage and are not rows in `/config`. `claude plugin configure notify-router@claude-mods` lists every setting and whether it is set, without showing values; "not set" means the default applies.
+Set these with `/plugin configure notify-router`, then run `/reload-plugins`. Sensitive settings (`ntfyTopic`, `ntfyToken`, `webhookUrl`) are kept in secure storage and are not rows in `/config`. `claude plugin configure notify-router@pradyb-mods` lists every setting and whether it is set, without showing values; "not set" means the default applies.
 
 | Setting | Default | |
 |---|---|---|
@@ -71,7 +71,7 @@ With no `ntfyTopic` set, nothing is sent to ntfy: only the macOS notification an
    ```
 
 5. In Claude Code, run `/plugin configure notify-router` and enter the topic in `ntfyTopic`. Leave `ntfyServer` at its default unless you self-host. For a protected topic, also set `ntfyToken`.
-6. Run `/reload-plugins`, then check that `ntfyTopic` no longer shows "not set" in `claude plugin configure notify-router@claude-mods`.
+6. Run `/reload-plugins`, then check that `ntfyTopic` no longer shows "not set" in `claude plugin configure notify-router@pradyb-mods`.
 
 **Test it.** By default a `done` alert needs a turn of 20 seconds or more, so set `doneAfterSeconds` to `0` for the test (then `/reload-plugins`), send any short prompt, and your phone should show `Claude Code: <folder>` with "Done in Ns". Set it back to `20` afterwards. To test `blocked`, trigger a permission prompt and leave it unanswered: it fires after `blockedAfterSeconds` (60 by default). A second alert of the same type within `dedupeSeconds` is dropped on purpose.
 

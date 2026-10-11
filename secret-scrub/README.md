@@ -10,7 +10,7 @@ Requires Claude Code 2.1.287 or later.
 
 ```
 /plugin marketplace add pradyb/claude-mods
-/plugin install secret-scrub@claude-mods
+/plugin install secret-scrub@pradyb-mods
 ```
 
 Or in one step, from a session: `/plugin install secret-scrub --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later).

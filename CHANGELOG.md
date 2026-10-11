@@ -2,6 +2,10 @@
 
 Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`) and tagged `<mod>--vX.Y.Z`. The first releases of `safety-guard` and `notify-router` carry the older `<mod>-vX.Y.Z` tags.
 
+## Marketplace
+
+- Renamed from `claude-mods` to `pradyb-mods`, so the name can't clash with another marketplace of the same name. The repository is unchanged. Installs are now `<mod>@pradyb-mods`; see the README for how to move over.
+
 ## focus-panel
 
 ### 0.2.0
