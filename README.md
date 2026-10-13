@@ -12,18 +12,6 @@ Then install the mods you want, for example `/plugin install safety-guard@pradyb
 
 A mod runs with your permissions, so read what it does first. `claude plugin validate <mod>` lists the events a mod handles and the calls it makes without running it.
 
-## Moved from `claude-mods`
-
-The marketplace is now named `pradyb-mods` (the repository is still `pradyb/claude-mods`), so its name can't clash with another marketplace called `claude-mods`. If you installed mods as `<mod>@claude-mods`, remove the old marketplace and install again:
-
-```
-/plugin marketplace remove claude-mods
-/plugin marketplace add pradyb/claude-mods
-/plugin install <mod>@pradyb-mods
-```
-
-Settings you made with `/plugin configure` are kept per plugin and may need to be entered again.
-
 ## Mods
 
 | Mod | Version | What it does |
