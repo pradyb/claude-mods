@@ -1,5 +1,5 @@
 import { test, expect } from 'claude-code/testing'
-import { extract, build, rows, urgent, parseModel, clean } from './register'
+import { extract, build, rows, urgent, parseModel, clean, afterCall } from './register'
 
 const ANSWER = `Done. I changed the loader.
 
@@ -109,4 +109,10 @@ test('parseModel and clean', () => {
   expect(parseModel('{broken')).toBeUndefined()
   expect(clean('- [ ] **Bold** `code`  text')).toBe('Bold code text')
   expect(clean('x'.repeat(200)).length).toBe(120)
+})
+
+test('afterCall: a failure stays only until the next call; worktree guard refusals never show', () => {
+  expect(afterCall(true, 'Bash', 'exit 1\nmore').map(x => x.text)).toEqual(['Bash: exit 1'])
+  expect(afterCall(false, 'Bash', 'ok')).toEqual([])
+  expect(afterCall(true, 'Bash', 'This session is isolated in the worktree /x/y')).toEqual([])
 })
