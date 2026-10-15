@@ -8,7 +8,7 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## focus-panel
 
-### Unreleased
+### 0.2.1
 - ERROR no longer lists tool failures Claude moved past: only a failure with no tool call after it shows. Worktree-isolation refusals are ignored.
 
 ### 0.2.0
