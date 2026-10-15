@@ -31,7 +31,7 @@ Only the sections that have something; with nothing to show there is no panel. E
 | Section | Style | Where it comes from |
 |---|---|---|
 | **NEEDS YOU** | bold | Questions and lines such as "please confirm" or "let me know" near the end of the response; bullets under a "Needs you" or "Decisions" heading |
-| **ERROR** | red text | Tool calls that failed this turn, and a turn that ended on an API error or a refusal; "Failed:" / "Error:" lines, ❌ lines, and bullets under a "Failures" or "Issues" heading |
+| **ERROR** | red text | The last tool call of the turn if it failed (a failure Claude then moved past is dropped, as are worktree-isolation refusals), and a turn that ended on an API error or a refusal; "Failed:" / "Error:" lines, ❌ lines, and bullets under a "Failures" or "Issues" heading |
 | **NEXT** | bold, with a task id | A "Next:" or "Next step:" line, or the first bullet under a "Next steps" heading; else the in-progress (or first unblocked) task from Claude's task list, with its id (`#3`) |
 | **TO-DO** | `○` marker | Unchecked `- [ ]` items, "TODO:" lines, the other bullets under a "Next steps" or "To-do" heading, and the other open tasks with their ids |
 | **HEADS-UP** | italic | "Note:", "Warning:", "Important:", "Risk:" and similar lines, ⚠ lines, and bullets under a "Warnings" or "Risks" heading |

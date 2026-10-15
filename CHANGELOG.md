@@ -8,6 +8,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## focus-panel
 
+### Unreleased
+- ERROR no longer lists tool failures Claude moved past: only a failure with no tool call after it shows. Worktree-isolation refusals are ignored.
+
 ### 0.2.0
 - Colors are theme colors instead of fixed hues, so they follow your theme; the frame turns red when an error is shown and amber when a question is waiting on you.
 - Bullets are sorted by the heading above them: under "Failures" they are ERROR, under "Needs you" NEEDS YOU, under "Warnings" HEADS-UP, under "Next steps" NEXT (the first) and TO-DO (the rest), under "To-do" TO-DO. Ticked `- [x]` boxes under a heading are skipped.

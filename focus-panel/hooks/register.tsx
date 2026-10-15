@@ -157,6 +157,14 @@ export function parseModel(text: string): Partial<Record<Section, unknown>> | un
   }
 }
 
+// Only a failure with no tool call after it is unresolved. Harness refusals (worktree isolation) are not failures of the work.
+// ponytail: parallel calls finishing out of order can clear a real failure; track per-call order if that bites.
+const GUARD = /isolated in the worktree/i
+export function afterCall(isError: unknown, tool: string, text: string): Item[] {
+  if (!isError || GUARD.test(text)) return []
+  return [{ text: clean(`${tool}: ${text.split('\n').find(l => l.trim()) ?? 'failed'}`) }]
+}
+
 export const register: Register = (on, options) => {
   let errors: Item[] = []
 
@@ -170,10 +178,7 @@ export const register: Register = (on, options) => {
   on('tool.call', async ($, e, next) => {
     const r = await next(e)
     if (r.deny !== undefined) return r
-    if (r.isError) {
-      const line = String(r.text ?? '').split('\n').find(l => l.trim()) ?? 'failed'
-      errors = merge(errors, [{ text: clean(`${e.tool}: ${line}`) }])
-    }
+    errors = afterCall(r.isError, e.tool, String(r.text ?? ''))
     const res = r.result as any
     const input = e as any
     if (!r.isError) {
