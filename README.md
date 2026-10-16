@@ -21,6 +21,9 @@ A mod runs with your permissions, so read what it does first. `claude plugin val
 | [notify-router](notify-router) | 0.4.1 | Rules for alerts: done, blocked (only if still waiting), error, and context or rate-limit usage, sent to a chime, macOS notifications, ntfy and Slack, Discord or JSON webhooks, with quiet hours and dedupe. |
 | [status-bar](status-bar) | 0.2.0 | A one-line status bar above the prompt: folder, git branch and state, 5-hour and 7-day usage bars, context with tokens, prompt-cache countdown, cost, session time, turns and clock. Desktop app only; the CLI keeps its own status line. |
 | [focus-panel](focus-panel) | 0.2.1 | A panel above the prompt after each response: what needs you, errors, the next action with its task id, open to-dos and heads-ups. Run it or dismiss it. |
+| [handover](handover) | 0.1.0 | `/handover` writes a handover note from the conversation, clears, and continues from it in a fresh session. Suggested when context passes 40%. |
+| [read-budget](read-budget) | 0.1.0 | Refuses the third full read of the same large, unchanged file in a session and points Claude to Grep or a ranged read. |
+| [worktree-hints](worktree-hints) | 0.1.0 | In a worktree session, tells Claude up front which commands the worktree guard refuses, so it doesn't burn retries on them. |
 
 ## Versioning
 

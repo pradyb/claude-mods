@@ -6,6 +6,21 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 - Renamed from `claude-mods` to `pradyb-mods`, so the name can't clash with another marketplace of the same name. The repository is unchanged. Installs are now `<mod>@pradyb-mods`; see the README for how to move over.
 
+## handover
+
+### 0.1.0
+- Initial release: `/handover` (or `/handover save`, `/handover <focus>`) writes a handover note with one forked request over the conversation, saves it as `~/.claude/projects/<project>/handovers/<session-title>.md` (the repository's main project folder, also from a worktree), clears and continues from it. Suggested in the prompt box when context passes `threshold` (default 40%) and every 20 points after; a new session in a project with a recent note suggests continuing from the newest.
+
+## read-budget
+
+### 0.1.0
+- Initial release: after `maxFullReads` (default 2) full reads of one unchanged file of at least `minKb` (default 20) in a session, the next full read is refused with a pointer to Grep or a ranged read. Counts start over on change, compaction and `/clear`.
+
+## worktree-hints
+
+### 0.1.0
+- Initial release: in a worktree session, a system-prompt section naming the commands the worktree guard refuses and what to use instead.
+
 ## focus-panel
 
 ### 0.2.1
