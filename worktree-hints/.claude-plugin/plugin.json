@@ -1,0 +1,11 @@
+{
+  "name": "worktree-hints",
+  "version": "0.1.0",
+  "description": "In a worktree session, tells Claude up front which commands the worktree guard refuses (heredoc and inline-script edits, multi-line scripts, cd to computed paths), so it uses Edit and plain commands instead of retrying.",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/worktree-hints",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT"
+}

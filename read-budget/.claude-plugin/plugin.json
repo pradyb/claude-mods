@@ -1,0 +1,25 @@
+{
+  "name": "read-budget",
+  "version": "0.1.0",
+  "description": "Stops Claude from re-reading the same large, unchanged file in full again and again in one session: past a limit it is pointed to Grep or a ranged Read instead.",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/read-budget",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT",
+  "userConfig": {
+    "minKb": {
+      "type": "number",
+      "title": "Large file (KB)",
+      "description": "Only files at least this big count. Smaller files are always read.",
+      "default": 20
+    },
+    "maxFullReads": {
+      "type": "number",
+      "title": "Full reads allowed per file",
+      "description": "Full reads of one unchanged large file allowed before the next one is refused. The count starts over when the file changes, after a compaction and after /clear.",
+      "default": 2
+    }
+  }
+}

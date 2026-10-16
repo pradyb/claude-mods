@@ -1,0 +1,19 @@
+{
+  "name": "handover",
+  "version": "0.1.0",
+  "description": "/handover writes a handover note from the conversation (served from the prompt cache), saves it under ~/.claude/projects/<project>/handovers/<session-title>.md, clears the session and continues from the note in a fresh context. Suggests it when context passes a threshold.",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/handover",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT",
+  "userConfig": {
+    "threshold": {
+      "type": "number",
+      "title": "Suggest at context %",
+      "description": "When the context window passes this, /handover is suggested in the prompt box, and again every 20 points after. 0 = never suggest.",
+      "default": 40
+    }
+  }
+}

@@ -29,6 +29,21 @@
       "name": "focus-panel",
       "source": "./focus-panel",
       "description": "A panel above the prompt after each response: what needs you, errors, the next action with its task id, open to-dos and heads-ups."
+    },
+    {
+      "name": "handover",
+      "source": "./handover",
+      "description": "/handover writes a handover note from the conversation (served from the prompt cache), saves it under ~/.claude/projects/<project>/handovers/<session-title>.md, clears the session and continues from the note in a fresh context. Suggests it when context passes a threshold."
+    },
+    {
+      "name": "read-budget",
+      "source": "./read-budget",
+      "description": "Stops Claude from re-reading the same large, unchanged file in full again and again in one session: past a limit it is pointed to Grep or a ranged Read instead."
+    },
+    {
+      "name": "worktree-hints",
+      "source": "./worktree-hints",
+      "description": "In a worktree session, tells Claude up front which commands the worktree guard refuses (heredoc and inline-script edits, multi-line scripts, cd to computed paths), so it uses Edit and plain commands instead of retrying."
     }
   ],
   "description": "Mods (plugins) for Claude Code."
