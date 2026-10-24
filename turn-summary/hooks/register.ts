@@ -1,4 +1,4 @@
-import type { Register } from 'claude-code'
+import type { EngineInterface, Register } from 'claude-code'
 
 export type Turn = { startedAt: number; ms?: number; tools: number; agents: number; background: number }
 
@@ -17,55 +17,67 @@ export function summary(t: Turn, now: number): string {
   return out.join(' · ')
 }
 
+// The terminal shows the summary on the hint line under the prompt; the desktop draws no such line, so there it goes to the status line.
+async function show($: EngineInterface, turn: Turn | undefined, isOn: boolean) {
+  if ((await $.session.surface()) === 'terminal') return $.ui.invalidate('ui.render')
+  $.ui.status(turn && isOn ? summary(turn, await $.clock.now()) : undefined)
+}
+
 export const register: Register = on => {
   let turn: Turn | undefined
+  let isOn = true // /summary off is kept across sessions in the store
+
+  on('session.start', async ($, e, next) => {
+    await $.command.register({ name: 'summary', description: 'Turn the after-each-turn summary (time, tools, agents) on or off', argumentHint: '[on|off]', immediate: true })
+    isOn = (await $.store.get('isOn')) !== false
+    return next(e)
+  })
+
+  on('command.run', { command: 'summary' }, async ($, e) => {
+    const arg = e.args.trim().toLowerCase()
+    isOn = arg === 'on' ? true : arg === 'off' ? false : !isOn
+    await $.store.set('isOn', isOn)
+    await show($, turn, isOn)
+    return { text: isOn ? 'Turn summaries on.' : 'Turn summaries off. /summary turns them back on.' }
+  })
 
   // A typed prompt starts a new trip. A slash command or a machine-made prompt does not.
   on('prompt.submit', async ($, e, next) => {
     if (!e.command && !e.isMeta) {
       turn = { startedAt: await $.clock.now(), tools: 0, agents: 0, background: 0 }
-      $.ui.invalidate('ui.render')
+      await show($, turn, isOn)
     }
     return next(e)
   }).catch(($, e, next) => next(e)) // never block a prompt
 
   // Tool calls and spawns count from the main loop and from subagents alike: they are all work this prompt caused.
-  on('tool.call', ($, e, next) => {
+  on('tool.call', async ($, e, next) => {
     if (turn) {
       turn.tools++
-      $.ui.invalidate('ui.render')
+      await show($, turn, isOn)
     }
     return next(e)
   }).catch(($, e, next) => next(e))
 
-  on('agent.spawn', ($, e, next) => {
+  on('agent.spawn', async ($, e, next) => {
     if (turn) {
       turn.agents++
       if (e.background) turn.background++
-      $.ui.invalidate('ui.render')
+      await show($, turn, isOn)
     }
     return next(e)
   }).catch(($, e, next) => next(e))
 
-  on('turn.complete', ($, e, next) => {
+  on('turn.complete', async ($, e, next) => {
     if (turn && !e.agentId) {
       turn.ms = e.durationMs
-      $.ui.invalidate('ui.render')
+      await show($, turn, isOn)
     }
     return next(e)
   }).catch(($, e, next) => next(e))
 
-  // The terminal draws the hint line under the prompt; the desktop does not, so there the summary is a line in the band above the prompt.
   on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
-    if (!turn || e.props.isDraft || e.surface !== 'terminal') return next(e) // the line is for the person's typing while they type
+    if (!turn || !isOn || e.props.isDraft || e.surface !== 'terminal') return next(e) // the line is for the person's typing while they type
     return next({ ...e, props: { ...e.props, tail: `  ${summary(turn, await $.clock.now())}` } })
-  })
-
-  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    if (!turn || e.surface === 'terminal' || e.props.hasSurvey) return next(e)
-    const { Box, Text } = $.ui.resolve(e)
-    const below = await next(e) // what other mods draw in the band stays above the summary
-    const line = <Text dimColor>{summary(turn, await $.clock.now())}</Text>
-    return below ? <Box flexDirection="column">{below}{line}</Box> : line
   })
 }
