@@ -8,6 +8,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## turn-summary
 
+### 0.1.1
+- The desktop app has no hint line under the prompt, so there the summary is now a dim line in the band above the prompt. The terminal still shows it on the hint line.
+
 ### 0.1.0
 - Initial release: a summary on the hint line under the prompt after each turn (time, tool calls, subagents and how many ran in the background), kept until the next prompt.
 
