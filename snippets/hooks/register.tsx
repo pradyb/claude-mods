@@ -85,11 +85,6 @@ async function remove($: EngineInterface, name: string) {
   await update($, note, () => `Deleted ;${name}`)
 }
 
-const oneLine = (text: string, max: number) => {
-  const flat = text.replace(/\n/g, '⏎')
-  return flat.length > max ? `${flat.slice(0, Math.max(1, max - 1))}…` : flat
-}
-
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'snip', description: 'Text snippets: /snip opens the editor; add <name> <text> | rm <name> | list | path. Type ;name in a prompt to expand it.' })
@@ -112,26 +107,47 @@ export const register: Register = on => {
     const { Box, Text, Button, Input } = $.ui.resolve(e)
     await read($, rev) // subscribe: a change to the file redraws the list
     const [snippets, form, message] = [await load($), await read($, draft), await read($, note)]
-    const names = Object.keys(snippets).sort()
-    const room = Math.max(10, (e.props.bodyColumns ?? 60) - names.reduce((m, n) => Math.max(m, n.length), 0) - 24)
+    const entries = Object.entries(snippets).sort(([a], [b]) => a.localeCompare(b))
+    const nameWidth = entries.reduce((m, [n]) => Math.max(m, n.length), 0) + 2 // `;` and a space
+    const LABEL = 6 // the form's label column: its fields and buttons start after it
 
     return (
       <Box flexDirection="column" rowGap={1}>
         <Box flexDirection="column">
-          {names.length === 0 && <Text dimColor>No snippets yet. Add one below, then type ;name in a prompt.</Text>}
-          {Object.entries(snippets).sort(([a], [b]) => a.localeCompare(b)).map(([n, text]) => (
-            <Box key={`row-${n}`} flexDirection="row" columnGap={1}>
-              <Text bold>{`;${n}`}</Text>
-              <Text dimColor>{oneLine(text, room)}</Text>
-              <Button key={`edit-${n}`} label="Edit" onPress={() => update($, draft, () => ({ name: n, text }))} />
-              <Button key={`del-${n}`} label="Delete" onPress={() => remove($, n)} />
+          {entries.length === 0 && <Text dimColor>No snippets yet. Add one below, then type ;name in a prompt.</Text>}
+          {entries.map(([n, text]) => (
+            <Box key={`row-${n}`} flexDirection="row" columnGap={1} alignItems="center">
+              <Box width={nameWidth} flexShrink={0}>
+                <Text bold>{`;${n}`}</Text>
+              </Box>
+              <Box flexGrow={1} flexShrink={1} overflow="hidden">
+                <Text dimColor wrap="truncate-end">{text.replace(/\n/g, '⏎')}</Text>
+              </Box>
+              <Box flexShrink={0} columnGap={1}>
+                <Button key={`edit-${n}`} label="Edit" onPress={() => update($, draft, () => ({ name: n, text }))} />
+                <Button key={`del-${n}`} label="Delete" onPress={() => remove($, n)} />
+              </Box>
             </Box>
           ))}
         </Box>
-        <Box flexDirection="column">
-          <Input key="name" label="Name  ;" placeholder="cr" value={form.name} submitLabel="save" onInput={v => update($, draft, d => ({ ...d, name: v }))} onSubmit={() => save($)} />
-          <Input key="text" label="Text  " placeholder="what ;name expands to (Enter saves)" rows={3} value={form.text} submitLabel="save" onInput={v => update($, draft, d => ({ ...d, text: v }))} onSubmit={() => save($)} />
+        <Box flexDirection="column" rowGap={1}>
+          <Box flexDirection="row" columnGap={1} alignItems="center">
+            <Box width={LABEL} flexShrink={0}>
+              <Text dimColor>Name</Text>
+            </Box>
+            <Box flexGrow={1}>
+              <Input key="name" placeholder=";cr" value={form.name} submitLabel="next" onInput={v => update($, draft, d => ({ ...d, name: v }))} onSubmit={() => $.ui.focus({ requestId: PANE, key: 'text' })} />
+            </Box>
+          </Box>
           <Box flexDirection="row" columnGap={1}>
+            <Box width={LABEL} flexShrink={0}>
+              <Text dimColor>Text</Text>
+            </Box>
+            <Box flexGrow={1}>
+              <Input key="text" placeholder="what ;name expands to" rows={3} value={form.text} submitLabel="save" onInput={v => update($, draft, d => ({ ...d, text: v }))} onSubmit={() => save($)} />
+            </Box>
+          </Box>
+          <Box flexDirection="row" columnGap={1} alignItems="center" paddingLeft={LABEL + 1}>
             <Button key="save" label="Save" variant="primary" onPress={() => save($)} />
             <Button key="clear" label="Clear" onPress={() => update($, draft, () => EMPTY)} />
             <Text dimColor>{message}</Text>

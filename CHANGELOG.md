@@ -13,6 +13,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## snippets
 
+### 0.1.1
+- Editor pane: the labels, fields and buttons now line up (fixed label column, Edit and Delete at the right edge, long text cut with an ellipsis). Enter in the name field moves to the text field.
+
 ### 0.1.0
 - Initial release: `;name` in a prompt is expanded to the saved text on Enter; `/snip` opens an editor pane (add, edit, delete), and `/snip add|rm|list|path` do the same from the prompt; snippets stored in `~/.claude/snippets.json`.
 
