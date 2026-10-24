@@ -6,6 +6,16 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 - Renamed from `claude-mods` to `pradyb-mods`, so the name can't clash with another marketplace of the same name. The repository is unchanged. Installs are now `<mod>@pradyb-mods`; see the README for how to move over.
 
+## turn-summary
+
+### 0.1.0
+- Initial release: a summary on the hint line under the prompt after each turn (time, tool calls, subagents and how many ran in the background), kept until the next prompt.
+
+## snippets
+
+### 0.1.0
+- Initial release: `;name` in a prompt is expanded to the saved text on Enter; `/snip` opens an editor pane (add, edit, delete), and `/snip add|rm|list|path` do the same from the prompt; snippets stored in `~/.claude/snippets.json`.
+
 ## handover
 
 ### 0.1.0
