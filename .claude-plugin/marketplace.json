@@ -44,6 +44,16 @@
       "name": "worktree-hints",
       "source": "./worktree-hints",
       "description": "In a worktree session, tells Claude up front which commands the worktree guard refuses (heredoc and inline-script edits, multi-line scripts, cd to computed paths), so it uses Edit and plain commands instead of retrying."
+    },
+    {
+      "name": "turn-summary",
+      "source": "./turn-summary",
+      "description": "After each turn, a dim summary under the prompt: how long it took, how many tools were called and how many subagents (and background agents) were started."
+    },
+    {
+      "name": "snippets",
+      "source": "./snippets",
+      "description": "Text replacement for prompts: type ;name and it is expanded to the saved text on Enter. Manage snippets with /snip; stored in ~/.claude/snippets.json."
     }
   ],
   "description": "Mods (plugins) for Claude Code."

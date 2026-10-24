@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mod: [safety-guard, secret-scrub, notify-router, status-bar, focus-panel, handover, read-budget, worktree-hints]
+        mod: [safety-guard, secret-scrub, notify-router, status-bar, focus-panel, handover, read-budget, worktree-hints, turn-summary, snippets]
 
     steps:
       - name: Checkout code
