@@ -1,6 +1,6 @@
 {
   "name": "snippets",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Text replacement for your prompts: type ;name and it is expanded to the saved text when you press Enter, before the model sees it. Add, list and remove snippets with /snip; they live in ~/.claude/snippets.json.",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"

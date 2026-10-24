@@ -25,7 +25,7 @@ A mod runs with your permissions, so read what it does first. `claude plugin val
 | [read-budget](read-budget) | 0.1.0 | Refuses the third full read of the same large, unchanged file in a session and points Claude to Grep or a ranged read. |
 | [worktree-hints](worktree-hints) | 0.1.0 | In a worktree session, tells Claude up front which commands the worktree guard refuses, so it doesn't burn retries on them. |
 | [turn-summary](turn-summary) | 0.1.0 | After each turn, a summary under the prompt: how long it took, tools called, subagents and background agents started. Stays until your next prompt. |
-| [snippets](snippets) | 0.1.0 | Text replacement: type `;name` and it is expanded to saved text when you press Enter. Add, list and remove with `/snip`; stored in `~/.claude/snippets.json`. |
+| [snippets](snippets) | 0.1.1 | Text replacement: type `;name` and it is expanded to saved text when you press Enter. Add, list and remove with `/snip`; stored in `~/.claude/snippets.json`. |
 
 ## Versioning
 
