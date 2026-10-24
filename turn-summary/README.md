@@ -1,6 +1,6 @@
 # turn-summary
 
-A dim summary for the last turn (under the prompt in the terminal, in the band above the prompt on the desktop): how long it took, how many tools were called and how many subagents were started. It stays until your next prompt. Terminal and desktop app. Requires Claude Code 2.1.287 or later.
+A summary of the last turn (under the prompt in the terminal, in the footer next to the mode and model on the desktop): how long it took, how many tools were called and how many subagents were started. It stays until your next prompt. Terminal and desktop app. Requires Claude Code 2.1.287 or later.
 
 ```
 ? for shortcuts   ✓ ⏱ 42s · 11 tools · 2 agents (1 background)
@@ -15,6 +15,10 @@ A dim summary for the last turn (under the prompt in the terminal, in the band a
 
 Or in one step, from a session: `/plugin install turn-summary --marketplace pradyb/claude-mods` (Claude Code 2.1.275 or later).
 
+## Turning it off
+
+`/summary off` hides it, `/summary on` brings it back, and plain `/summary` flips it. The choice is kept across sessions.
+
 ## What it shows
 
 | Part | Meaning |
@@ -28,6 +32,6 @@ A count of zero is left out. A new turn starts when you send a prompt; a slash c
 
 ## Limits
 
-- In the terminal the summary is added to the hint line under the prompt (`? for shortcuts`), so a narrow window cuts it at the end, and it is hidden while you type. On the desktop it is a line in the band above the prompt, below anything other mods draw there.
+- In the terminal the summary is added to the hint line under the prompt (`? for shortcuts`), so a narrow window cuts it at the end, and it is hidden while you type. On the desktop it is the status-line entry in the footer, labelled with the mod's name.
 - Background Bash commands are not counted, only background agents.
 - Counts are kept in memory and start over when the mod reloads.

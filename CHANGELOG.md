@@ -8,6 +8,10 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## turn-summary
 
+### 0.1.2
+- On the desktop the summary now shows in the footer next to the mode and model (the status line), instead of a line above the prompt.
+- `/summary on|off` turns it on or off (plain `/summary` flips it); the choice is kept across sessions.
+
 ### 0.1.1
 - The desktop app has no hint line under the prompt, so there the summary is now a dim line in the band above the prompt. The terminal still shows it on the hint line.
 
