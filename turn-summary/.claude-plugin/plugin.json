@@ -1,6 +1,6 @@
 {
   "name": "turn-summary",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "After each turn, a dim summary under the prompt: how long it took, how many tools were called and how many subagents (and background agents) were started. Stays until your next prompt.",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"

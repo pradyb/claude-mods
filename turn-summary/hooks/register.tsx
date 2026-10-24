@@ -55,8 +55,17 @@ export const register: Register = on => {
     return next(e)
   }).catch(($, e, next) => next(e))
 
+  // The terminal draws the hint line under the prompt; the desktop does not, so there the summary is a line in the band above the prompt.
   on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
-    if (!turn || e.props.isDraft) return next(e) // the line is for the person's typing while they type
+    if (!turn || e.props.isDraft || e.surface !== 'terminal') return next(e) // the line is for the person's typing while they type
     return next({ ...e, props: { ...e.props, tail: `  ${summary(turn, await $.clock.now())}` } })
+  })
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (!turn || e.surface === 'terminal' || e.props.hasSurvey) return next(e)
+    const { Box, Text } = $.ui.resolve(e)
+    const below = await next(e) // what other mods draw in the band stays above the summary
+    const line = <Text dimColor>{summary(turn, await $.clock.now())}</Text>
+    return below ? <Box flexDirection="column">{below}{line}</Box> : line
   })
 }
