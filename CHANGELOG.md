@@ -69,6 +69,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## notify-router
 
+### 0.5.0
+- The alert title now carries the session name when it has one (`/rename`): `Claude Code: fix login [my-project]`. Unnamed sessions keep `Claude Code: my-project`. New `useSessionName` setting (default on) turns it off. A rename shows up after the next prompt.
+
 ### 0.4.1
 - `webhookFormat` accepts `off`: keeps the saved webhook URL but sends nothing.
 

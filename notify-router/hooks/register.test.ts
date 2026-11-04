@@ -17,6 +17,8 @@ function engine(on: any, now = at(12), withClock = true, cwd = '/Users/x/my-proj
   on('session.cwd', () => ({ value: cwd }))
   on('turn.complete', (_$: any, e: any) => ({ text: e.answer }))
   on('classic.Notification', () => ({}))
+  on('classic.SessionStart', () => ({}) as never)
+  on('classic.UserPromptSubmit', () => ({}) as never)
   on('session.measure', (_$: any, e: any) => ({ changed: e.changed }))
   return seen
 }
@@ -304,6 +306,48 @@ test('no sessionLabel by default', async ($, on) => {
   await $.turn.complete(done(30))
   await settle()
   expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+})
+
+// ---- 0.5.0: session name in the title
+test('a named session leads the title, the folder follows in brackets', async ($, on) => {
+  const seen = engine(on)
+  await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'fix login' } as never)
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: fix login [my-proj]')
+})
+
+test('the name from SessionStart is used, an empty title keeps the last name', async ($, on) => {
+  const seen = engine(on)
+  await $.classic.SessionStart({ source: 'resume', session_title: 'fix login' } as never)
+  await $.classic.UserPromptSubmit({ prompt: 'go', session_title: '' } as never)
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: fix login [my-proj]')
+})
+
+test('a named session without the folder', { options: { includeFolder: false } }, async ($, on) => {
+  const seen = engine(on)
+  await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'fix login' } as never)
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: fix login')
+})
+
+test('useSessionName off keeps the folder title', { options: { useSessionName: false } }, async ($, on) => {
+  const seen = engine(on)
+  await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'fix login' } as never)
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+})
+
+test('ntfy title with a name is ASCII only', { options: { desktop: false, ntfyTopic: 't' } }, async ($, on) => {
+  const seen = engine(on)
+  await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'fix café' } as never)
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.ntfy[0].init.headers.Title).toBe('Claude Code: fix caf? [my-proj]')
 })
 
 // ---- 0.4.0: webhook sink
