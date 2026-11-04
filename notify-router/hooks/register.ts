@@ -67,7 +67,7 @@ export function inQuietHours(spec: string, minutes: number): boolean {
 
 // Rules, then sinks. `last` holds the time each `key` was last sent (dedupe); the key defaults to the kind.
 // ponytail: in-memory dedupe, resets on reload; one alert at a time per sink, sinks run in parallel.
-async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, number>, kind: Kind, message: string, key: string = kind) {
+async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, number>, kind: Kind, message: string, key: string = kind, name = '') {
   try {
     if (!inList(o.notifyOn, kind)) return
     const now = await $.clock.now()
@@ -82,7 +82,9 @@ async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, n
     const folder = o.includeFolder ? (await $.session.cwd().catch(() => '')).split(/[\\/]/).filter(Boolean).pop() : undefined
     // two sessions in one folder: the first characters of the session id tell them apart
     const label = o.sessionLabel ? (await $.session.id().catch(() => '')).slice(0, 4) : ''
-    const title = `Claude Code${folder ? `: ${folder}` : ''}${label ? ` #${label}` : ''}`
+    // a named session leads with its name and keeps the folder in brackets; unnamed falls back to the folder
+    const who = name && o.useSessionName ? `${name}${folder ? ` [${folder}]` : ''}` : folder
+    const title = `Claude Code${who ? `: ${who}` : ''}${label ? ` #${label}` : ''}`
     const sinks: [string, Promise<unknown>][] = []
 
     // argv form: the text never enters the AppleScript source, so quotes can't break or inject.
@@ -119,7 +121,7 @@ async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, n
 }
 
 // Context fill and each rate-limit window against the thresholds. `announced` is the highest threshold already alerted per metric.
-async function checkUsage($: EngineInterface, o: PluginOptions, last: Map<string, number>, announced: Map<string, number>, e: SessionMeasureInput) {
+async function checkUsage($: EngineInterface, o: PluginOptions, last: Map<string, number>, announced: Map<string, number>, e: SessionMeasureInput, name: string) {
   try {
     const thresholds = parseThresholds(String(o.usageThresholds))
     if (!thresholds.length || !e.changed.some(u => u === 'context' || u === 'rateLimits')) return
@@ -138,7 +140,7 @@ async function checkUsage($: EngineInterface, o: PluginOptions, last: Map<string
       if (alert === undefined) continue
       const reset = r.resetsAt ? formatReset(Date.parse(r.resetsAt) - now) : ''
       const text = r.metric === 'context' ? `Context window ${Math.floor(r.percent)}% full` : `${r.label} at ${Math.floor(r.percent)}%${reset ? `, resets in ${reset}` : ''}`
-      await deliver($, o, last, 'usage', text, `usage:${r.metric}:${alert}`)
+      await deliver($, o, last, 'usage', text, `usage:${r.metric}:${alert}`, name)
     }
   } catch {
     // an alert must never break a turn
@@ -149,6 +151,9 @@ export const register: Register = (on, options) => {
   const last = new Map<string, number>()
   const announced = new Map<string, number>()
   let pending: { cancel(): void } | undefined
+  // The Notification hook carries no title; SessionStart and UserPromptSubmit do, so keep the latest non-empty one.
+  // ponytail: a /rename shows up after the next prompt.
+  let name = ''
   const cancel = () => {
     pending?.cancel()
     pending = undefined
@@ -159,9 +164,9 @@ export const register: Register = (on, options) => {
     if (e.agentId === undefined && !e.isAborted) {
       const secs = Math.round(e.durationMs / 1000)
       if (e.reason === 'answer') {
-        if (secs >= Number(options.doneAfterSeconds)) void deliver($, options, last, 'done', `Done in ${secs}s`)
+        if (secs >= Number(options.doneAfterSeconds)) void deliver($, options, last, 'done', `Done in ${secs}s`, 'done', name)
       } else {
-        void deliver($, options, last, 'error', `Turn ended (${e.reason}) after ${secs}s`)
+        void deliver($, options, last, 'error', `Turn ended (${e.reason}) after ${secs}s`, 'error', name)
       }
     }
     return next(e)
@@ -173,7 +178,7 @@ export const register: Register = (on, options) => {
       cancel()
       const fire = () => {
         pending = undefined
-        void deliver($, options, last, 'blocked', e.message)
+        void deliver($, options, last, 'blocked', e.message, 'blocked', name)
       }
       const ms = Number(options.blockedAfterSeconds) * 1000
       if (ms > 0) pending = $.clock.after(ms, fire)
@@ -182,9 +187,18 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
+  on('classic.SessionStart', ($, e, next) => {
+    name = e.session_title?.trim() || name
+    return next(e)
+  })
+  on('classic.UserPromptSubmit', ($, e, next) => {
+    name = e.session_title?.trim() || name
+    return next(e)
+  })
+
   // The engine pushes usage whenever the context fill or a rate-limit window moves.
   on('session.measure', ($, e, next) => {
-    void checkUsage($, options, last, announced, e)
+    void checkUsage($, options, last, announced, e, name)
     return next(e)
   })
 

@@ -1,6 +1,6 @@
 {
   "name": "notify-router",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Rules for Claude Code alerts: when one is worth sending (done, blocked, error, usage limits) and where it goes (chime, macOS notification, ntfy, Slack, Discord or a JSON webhook).",
   "author": {
     "name": "Pradeep Kumar Balakrishnan"
@@ -49,6 +49,12 @@
       "type": "boolean",
       "title": "Include the folder name in alerts",
       "description": "Puts the session's folder name in the alert title so you can tell which session needs you. The name is sent to every sink, ntfy.sh included.",
+      "default": true
+    },
+    "useSessionName": {
+      "type": "boolean",
+      "title": "Use the session name in the title",
+      "description": "When the session has a name (/rename), the title becomes Claude Code: <name> [folder]. Unnamed sessions keep the folder name. The name is sent to every sink, ntfy.sh included.",
       "default": true
     },
     "sessionLabel": {

@@ -31,6 +31,7 @@ Set these with `/plugin configure notify-router`, then run `/reload-plugins`. Se
 | `quietHours` | empty | `HH:MM-HH:MM`, local time, may wrap past midnight (`22:00-07:00`) |
 | `dedupeSeconds` | `60` | Don't repeat the same event type within this time; 0 = off |
 | `includeFolder` | `true` | Put the session's folder name in the alert title (`Claude Code: my-project`) so you can tell which session needs you |
+| `useSessionName` | `true` | When the session has a name (`/rename`), the title leads with it and keeps the folder in brackets (`Claude Code: fix login [my-project]`). Unnamed sessions keep the folder title. A rename shows up after your next prompt |
 | `sessionLabel` | `false` | Add the first 4 characters of the session id to the title (`Claude Code: my-project #a1b2`) so two sessions in the same folder can be told apart |
 | `chime` | `true` | Play a short sound with each alert (macOS only). Quiet hours, dedupe and the event filter apply to it |
 | `chimeOn` | `done,blocked,error,usage` | Which events play the chime. Leave one out to keep its notification but not its sound |
@@ -89,13 +90,13 @@ The webhook URL is a secret: anyone who has it can post to that channel. It is s
 
 ## Privacy
 
-Alerts carry only the session's folder name (turn off with `includeFolder`), the 4-character session label if you turned `sessionLabel` on, and a short status line ("Done in 42s", or Claude's own "needs your permission to use Bash"), never the conversation. The folder name goes to every sink, so on a public ntfy server, or in a Slack or Discord channel others can read, it reveals your project names. On the public ntfy.sh the **topic name is the only secret**: use a long random one, or a protected topic with a token. Failures are logged at debug level (`claude --debug`) with the sink name and HTTP status only, never the topic or webhook URL.
+Alerts carry only the session's folder name (turn off with `includeFolder`), the session's name if it has one (turn off with `useSessionName`), the 4-character session label if you turned `sessionLabel` on, and a short status line ("Done in 42s", or Claude's own "needs your permission to use Bash"), never the conversation. The folder and session names go to every sink, so on a public ntfy server, or in a Slack or Discord channel others can read, it reveals your project names. On the public ntfy.sh the **topic name is the only secret**: use a long random one, or a protected topic with a token. Failures are logged at debug level (`claude --debug`) with the sink name and HTTP status only, never the topic or webhook URL.
 
 ## Limits
 
 - The chime and notifications are macOS-only. Notifications show the **Script Editor** icon, and may need allowing in System Settings → Notifications.
 - No terminal-focus detection, so there is no `skip_if_focused`.
-- Without `sessionLabel`, the title is only the folder's name, so two sessions in the same folder look alike. The label is a slice of the session id, not a name you choose: the API exposes no session title.
+- An unnamed session's title is only the folder's name, so two unnamed sessions in the same folder look alike: name them with `/rename`, or turn on `sessionLabel`. The name is read from the session start and each prompt, so before the first of those the title falls back to the folder.
 - Dedupe state and a pending `blocked` timer live in memory and are lost on reload or restart.
 - Not yet: webhook sinks and a team policy file; see the [Roadmap](#roadmap).
 
