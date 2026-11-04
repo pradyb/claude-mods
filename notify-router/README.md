@@ -31,7 +31,7 @@ Set these with `/plugin configure notify-router`, then run `/reload-plugins`. Se
 | `quietHours` | empty | `HH:MM-HH:MM`, local time, may wrap past midnight (`22:00-07:00`) |
 | `dedupeSeconds` | `60` | Don't repeat the same event type within this time; 0 = off |
 | `includeFolder` | `true` | Put the session's folder name in the alert title (`Claude Code: my-project`) so you can tell which session needs you |
-| `useSessionName` | `true` | When the session has a name (`/rename`), the title leads with it and keeps the folder in brackets (`Claude Code: fix login [my-project]`). Unnamed sessions keep the folder title. A rename shows up after your next prompt |
+| `useSessionName` | `true` | When the session has a name (`/rename`), the title leads with it and keeps the folder in brackets (`Claude Code: fix login [my-project]`). Unnamed sessions keep the folder title. The name comes from the session's hook events, falling back to its transcript where a managed policy bypasses them (macOS and Linux only). Without the hooks a rename shows after your next prompt |
 | `sessionLabel` | `false` | Add the first 4 characters of the session id to the title (`Claude Code: my-project #a1b2`) so two sessions in the same folder can be told apart |
 | `chime` | `true` | Play a short sound with each alert (macOS only). Quiet hours, dedupe and the event filter apply to it |
 | `chimeOn` | `done,blocked,error,usage` | Which events play the chime. Leave one out to keep its notification but not its sound |
