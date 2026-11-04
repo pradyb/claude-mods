@@ -69,6 +69,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## notify-router
 
+### 0.5.1
+- Fix: on a machine with managed settings the session name never showed, because the policy layer bypasses the hooks the name is read from. When the hooks gave no name, the alert now falls back to the session transcript's latest `/rename`. Needs `sh` and `grep` (macOS, Linux); elsewhere the title stays the folder's. Also means a rename shows at once, not after the next prompt, on those machines.
+
 ### 0.5.0
 - The alert title now carries the session name when it has one (`/rename`): `Claude Code: fix login [my-project]`. Unnamed sessions keep `Claude Code: my-project`. New `useSessionName` setting (default on) turns it off. A rename shows up after the next prompt.
 

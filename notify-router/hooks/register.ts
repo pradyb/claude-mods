@@ -65,6 +65,34 @@ export function inQuietHours(spec: string, minutes: number): boolean {
   return from <= to ? minutes >= from && minutes < to : minutes >= from || minutes < to
 }
 
+// grep's output (the transcript's custom-title lines, oldest first) -> the latest name; '' when none parse.
+// `ai-title` lines are Claude's own guess, not a name the user chose, so only `custom-title` counts.
+export function lastCustomTitle(text: string): string {
+  for (const line of text.split('\n').reverse()) {
+    try {
+      const t = JSON.parse(line)
+      if (t?.type === 'custom-title' && typeof t.customTitle === 'string' && t.customTitle.trim()) return t.customTitle.trim()
+    } catch {
+      // a half-written or foreign line: look at the one before
+    }
+  }
+  return ''
+}
+
+// Where a managed policy bypasses the classic hooks `session_title` comes from, /rename's record is still in the transcript.
+// The file is <config dir>/projects/<project>/<session id>.jsonl; the glob finds the project folder, so no path encoding is copied.
+// ponytail: needs sh and grep (macOS, Linux); elsewhere it reads '' and the title is the folder's. Reads the whole file, ~20 ms at 12 MB.
+async function transcriptName($: EngineInterface, id: string): Promise<string> {
+  try {
+    if (!id) return ''
+    const cfg = (await $.env.get('CLAUDE_CONFIG_DIR')) || `${await $.env.get('HOME')}/.claude`
+    const r = await $.process.run(['sh', '-c', 'grep -ah \'"type":"custom-title"\' "$1"/projects/*/"$2".jsonl | tail -1', 'sh', cfg, id])
+    return lastCustomTitle(r.stdout)
+  } catch {
+    return ''
+  }
+}
+
 // Rules, then sinks. `last` holds the time each `key` was last sent (dedupe); the key defaults to the kind.
 // ponytail: in-memory dedupe, resets on reload; one alert at a time per sink, sinks run in parallel.
 async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, number>, kind: Kind, message: string, key: string = kind, name = '') {
@@ -81,7 +109,10 @@ async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, n
     // which session is asking: the folder it runs in
     const folder = o.includeFolder ? (await $.session.cwd().catch(() => '')).split(/[\\/]/).filter(Boolean).pop() : undefined
     // two sessions in one folder: the first characters of the session id tell them apart
-    const label = o.sessionLabel ? (await $.session.id().catch(() => '')).slice(0, 4) : ''
+    const id = o.sessionLabel || (!name && o.useSessionName) ? await $.session.id().catch(() => '') : ''
+    const label = o.sessionLabel ? id.slice(0, 4) : ''
+    // no name from the hooks (a managed policy can bypass them): ask the transcript
+    if (!name && o.useSessionName) name = await transcriptName($, id)
     // a named session leads with its name and keeps the folder in brackets; unnamed falls back to the folder
     const who = name && o.useSessionName ? `${name}${folder ? ` [${folder}]` : ''}` : folder
     const title = `Claude Code${who ? `: ${who}` : ''}${label ? ` #${label}` : ''}`

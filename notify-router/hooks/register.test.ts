@@ -1,5 +1,5 @@
 import { test, expect, mock } from 'claude-code/testing'
-import { formatReset, inList, webhookBody, webhookFormat, inQuietHours, parseThresholds, thresholdAlert } from './register'
+import { formatReset, lastCustomTitle, inList, webhookBody, webhookFormat, inQuietHours, parseThresholds, thresholdAlert } from './register'
 
 const at = (h: number, m = 0) => new Date(2026, 0, 1, h, m).getTime() // local time
 const done = (secs: number, over: object = {}) => ({ answer: 'ok', durationMs: secs * 1000, isAborted: false, turnId: 't', reason: 'answer', ...over }) as never
@@ -8,9 +8,16 @@ const OFF = { desktop: false, chime: false, ntfyTopic: '' }
 
 // Stands in for the engine: records osascript runs and ntfy posts.
 function engine(on: any, now = at(12), withClock = true, cwd = '/Users/x/my-proj') {
-  const seen = { chimes: 0, sounds: [] as string[], desktop: [] as string[][], ntfy: [] as { url: string; init: any }[] }
+  const seen = { id: '4d0e9023-0000-4000-8000-000000000000', config: undefined as string | undefined, transcript: '', shell: [] as string[][], chimes: 0, sounds: [] as string[], desktop: [] as string[][], ntfy: [] as { url: string; init: any }[] }
   if (withClock) on('clock.now', () => ({ value: now }))
-  on('process.run', (_$: any, e: any) => { seen.desktop.push([...e.argv]); return { value: { exitCode: 0, stdout: '', stderr: '' } } })
+  on('process.run', (_$: any, e: any) => {
+    // the transcript lookup runs through sh; everything else is the desktop notification
+    if (e.argv[0] === 'sh') { seen.shell.push([...e.argv]); return { value: { exitCode: 0, stdout: seen.transcript, stderr: '' } } }
+    seen.desktop.push([...e.argv])
+    return { value: { exitCode: 0, stdout: '', stderr: '' } }
+  })
+  on('env.get', (_$: any, e: any) => ({ value: e.name === 'HOME' ? '/Users/x' : seen.config }))
+  on('session.id', () => ({ value: seen.id }))
   on('http.fetch', (_$: any, e: any) => { seen.ntfy.push({ url: e.url, init: e.init }); return { value: { status: 200, ok: true, headers: {}, text: '' } } })
   on('audio.play', (_$: any, e: any) => { seen.chimes++; seen.sounds.push(e.clip?.asset ?? e.asset); return { value: undefined } })
   on('ui.log', () => ({ value: undefined }))
@@ -286,7 +293,7 @@ test('chimeOn silences the chime for the events left out, the notification still
 
 test('sessionLabel adds the first four characters of the session id to the title', { options: { sessionLabel: true } }, async ($, on) => {
   const seen = engine(on)
-  on('session.id', () => ({ value: 'a1b2c3d4-0000-4000-8000-000000000000' }))
+  seen.id = 'a1b2c3d4-0000-4000-8000-000000000000'
   await $.turn.complete(done(30))
   await settle()
   expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj #a1b2')
@@ -294,7 +301,7 @@ test('sessionLabel adds the first four characters of the session id to the title
 
 test('sessionLabel without the folder', { options: { sessionLabel: true, includeFolder: false } }, async ($, on) => {
   const seen = engine(on)
-  on('session.id', () => ({ value: 'a1b2c3d4-0000-4000-8000-000000000000' }))
+  seen.id = 'a1b2c3d4-0000-4000-8000-000000000000'
   await $.turn.complete(done(30))
   await settle()
   expect(seen.desktop[0].at(-1)).toBe('Claude Code #a1b2')
@@ -302,7 +309,7 @@ test('sessionLabel without the folder', { options: { sessionLabel: true, include
 
 test('no sessionLabel by default', async ($, on) => {
   const seen = engine(on)
-  on('session.id', () => ({ value: 'a1b2c3d4-0000-4000-8000-000000000000' }))
+  seen.id = 'a1b2c3d4-0000-4000-8000-000000000000'
   await $.turn.complete(done(30))
   await settle()
   expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
@@ -348,6 +355,63 @@ test('ntfy title with a name is ASCII only', { options: { desktop: false, ntfyTo
   await $.turn.complete(done(30))
   await settle()
   expect(seen.ntfy[0].init.headers.Title).toBe('Claude Code: fix caf? [my-proj]')
+})
+
+// ---- 0.5.1: a managed policy bypasses the classic hooks, so the name comes from the transcript
+const T = (n: string, type = 'custom-title') => JSON.stringify({ type, [type === 'custom-title' ? 'customTitle' : 'aiTitle']: n, sessionId: 's' })
+
+test('lastCustomTitle: the last custom-title wins, ai-title and bad lines are skipped', () => {
+  expect(lastCustomTitle(`${T('old')}\n${T('new')}\n`)).toBe('new')
+  expect(lastCustomTitle(`${T('mine')}\n${T('guess', 'ai-title')}`)).toBe('mine')
+  expect(lastCustomTitle(`${T('mine')}\n{"type":"custom-ti`)).toBe('mine')
+  expect(lastCustomTitle(T('guess', 'ai-title'))).toBe('')
+  expect(lastCustomTitle(T('  '))).toBe('')
+  expect(lastCustomTitle('')).toBe('')
+  expect(lastCustomTitle('not json\n[]\nnull')).toBe('')
+})
+
+test('no hook name: the title comes from the transcript, looked up by session id', async ($, on) => {
+  const seen = engine(on)
+  seen.transcript = `${T('old')}\n${T('fix login')}\n`
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: fix login [my-proj]')
+  expect(seen.shell[0].slice(-2)).toEqual(['/Users/x/.claude', '4d0e9023-0000-4000-8000-000000000000'])
+})
+
+test('a hook name wins, the transcript is not read', async ($, on) => {
+  const seen = engine(on)
+  seen.transcript = T('from transcript')
+  await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'from hook' } as never)
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: from hook [my-proj]')
+  expect(seen.shell.length).toBe(0)
+})
+
+test('no name anywhere: the folder title, and useSessionName off never reads the transcript', async ($, on) => {
+  const seen = engine(on)
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+})
+
+test('useSessionName off: the transcript is not read', { options: { useSessionName: false } }, async ($, on) => {
+  const seen = engine(on)
+  seen.transcript = T('fix login')
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+  expect(seen.shell.length).toBe(0)
+})
+
+test('the transcript lookup honours CLAUDE_CONFIG_DIR', async ($, on) => {
+  const seen = engine(on)
+  seen.config = '/cfg'
+  seen.transcript = T('fix login')
+  await $.turn.complete(done(30))
+  await settle()
+  expect(seen.shell[0].at(-2)).toBe('/cfg')
 })
 
 // ---- 0.4.0: webhook sink
