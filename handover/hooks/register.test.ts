@@ -2,6 +2,8 @@ import { test, expect, mock } from 'claude-code/testing'
 import type { On } from 'claude-code'
 import { stepFor, firstPrompt, fileName, handoverDir, projectSlug } from './register'
 
+const cmd = (command: string, args = '') => ({ command, args, origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } })
+
 test('suggestion steps', () => {
   expect(stepFor(39, 40)).toBe(0)
   expect(stepFor(40, 40)).toBe(40)
@@ -62,9 +64,9 @@ test('/handover writes the note, clears, then continues from it', async ($, on) 
     calls.push('submit')
     return { text: e.text }
   })
-  await $.classic.SessionStart({ source: 'resume', prompt: '', transcript_path: '/h/.claude/projects/-r-app--claude-worktrees-us-1/s.jsonl' })
+  await $.classic.SessionStart({ source: 'resume', transcript_path: '/h/.claude/projects/-r-app--claude-worktrees-us-1/s.jsonl' })
   await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'Fix period filter' })
-  await $.command.run({ command: 'handover' })
+  await $.command.run(cmd('handover'))
   await clock.settle()
   expect(path).toBe('/h/.claude/projects/-r-app/handovers/fix-period-filter.md')
   expect(written).toBe('NOTE\n')
@@ -79,7 +81,7 @@ test('/handover save writes but does not clear', async ($, on) => {
   on('model.fork', () => ({ value: { isAnswered: true, text: 'NOTE', usage: {} } }) as never)
   on('fs.write', () => (calls.push('write'), { value: undefined }) as never)
   on('command.run', { command: 'clear' }, () => (calls.push('clear'), { text: '' }))
-  await $.command.run({ command: 'handover', args: 'save' })
+  await $.command.run(cmd('handover', 'save'))
   await clock.settle()
   expect(calls).toEqual(['write'])
 })
@@ -89,7 +91,7 @@ test('/handover with nothing to fork clears nothing', async ($, on) => {
   const calls: string[] = []
   on('model.fork', () => ({ value: { isAnswered: false, reason: 'nothing-to-fork' } }) as never)
   on('fs.write', () => (calls.push('write'), { value: undefined }) as never)
-  const r = await $.command.run({ command: 'handover' })
+  const r = await $.command.run(cmd('handover'))
   expect(r.text).toContain('Nothing was cleared')
   expect(calls).toEqual([])
 })

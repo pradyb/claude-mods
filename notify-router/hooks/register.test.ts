@@ -3,7 +3,8 @@ import { formatReset, lastCustomTitle, inList, webhookBody, webhookFormat, inQui
 
 const at = (h: number, m = 0) => new Date(2026, 0, 1, h, m).getTime() // local time
 const done = (secs: number, over: object = {}) => ({ answer: 'ok', durationMs: secs * 1000, isAborted: false, turnId: 't', reason: 'answer', ...over }) as never
-const settle = () => new Promise(r => setTimeout(r, 0))
+declare const setTimeout: (f: () => void, ms: number) => unknown
+const settle = () => new Promise(r => setTimeout(r as () => void, 0))
 const OFF = { desktop: false, chime: false, ntfyTopic: '' }
 
 // Stands in for the engine: records osascript runs and ntfy posts.
@@ -50,7 +51,7 @@ test('desktop: long turn alerts, short turn and abort do not', async ($, on) => 
   await $.turn.complete(done(30))
   await settle()
   expect(seen.desktop.length).toBe(1)
-  expect(seen.desktop[0]).toContain('Done in 30s')
+  expect(seen.desktop[0]!).toContain('Done in 30s')
 })
 
 test('osascript gets the text as argv, never inside the script', async ($, on) => {
@@ -69,8 +70,8 @@ test('ntfy: posts to the topic with title, tag, priority and bearer token', { op
   await settle()
   expect(seen.desktop.length).toBe(0)
   expect(seen.ntfy.length).toBe(1)
-  expect(seen.ntfy[0].url).toBe('https://ntfy.example/my%20topic')
-  const h = seen.ntfy[0].init.headers
+  expect(seen.ntfy[0]!.url).toBe('https://ntfy.example/my%20topic')
+  const h = seen.ntfy[0]!.init.headers
   expect(h.Authorization).toBe('Bearer tk_1')
   expect(h.Tags).toBe('x')
   expect(h.Priority).toBe('high')
@@ -118,7 +119,7 @@ test('blocked: alerts only after the wait, if still blocked', { options: { block
   expect(seen.desktop.length).toBe(0)
   await clock.advance(2_000)
   expect(seen.desktop.length).toBe(1)
-  expect(seen.desktop[0]).toContain('Claude needs your permission to use Bash')
+  expect(seen.desktop[0]!).toContain('Claude needs your permission to use Bash')
 })
 
 test('blocked: cancelled when the user acts before the wait ends', { options: { blockedAfterSeconds: 60 } }, async ($, on) => {
@@ -137,21 +138,21 @@ test('desktop title names the session folder', async ($, on) => {
   const seen = engine(on)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: my-proj')
 })
 
 test('ntfy title names the folder, ASCII only', { options: { desktop: false, ntfyTopic: 't' } }, async ($, on) => {
   const seen = engine(on, at(12), true, 'C:\\work\\café-app')
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.ntfy[0].init.headers.Title).toBe('Claude Code: caf?-app')
+  expect(seen.ntfy[0]!.init.headers.Title).toBe('Claude Code: caf?-app')
 })
 
 test('includeFolder off keeps the title plain', { options: { includeFolder: false } }, async ($, on) => {
   const seen = engine(on)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code')
 })
 
 test('chime plays with an alert, not for short turns, quiet hours or when off', async ($, on) => {
@@ -215,7 +216,7 @@ test('usage: context alerts at each threshold once', async ($, on) => {
   expect(seen.desktop.length).toBe(0)
   await $.session.measure(ctx(81)); await settle()
   expect(seen.desktop.length).toBe(1)
-  expect(seen.desktop[0]).toContain('Context window 81% full')
+  expect(seen.desktop[0]!).toContain('Context window 81% full')
   await $.session.measure(ctx(85)); await settle()
   expect(seen.desktop.length).toBe(1)
   await $.session.measure(ctx(96)); await settle()
@@ -227,7 +228,7 @@ test('usage: a rate-limit window names itself and when it resets', async ($, on)
   const seen = engine(on)
   await $.session.measure(limit('five_hour', 82.5, new Date(at(12) + 80 * 60_000).toISOString())); await settle()
   expect(seen.desktop.length).toBe(1)
-  expect(seen.desktop[0]).toContain('5-hour limit at 82%, resets in 1h 20m')
+  expect(seen.desktop[0]!).toContain('5-hour limit at 82%, resets in 1h 20m')
 })
 
 test('usage: metrics are tracked separately', async ($, on) => {
@@ -296,7 +297,7 @@ test('sessionLabel adds the first four characters of the session id to the title
   seen.id = 'a1b2c3d4-0000-4000-8000-000000000000'
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj #a1b2')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: my-proj #a1b2')
 })
 
 test('sessionLabel without the folder', { options: { sessionLabel: true, includeFolder: false } }, async ($, on) => {
@@ -304,7 +305,7 @@ test('sessionLabel without the folder', { options: { sessionLabel: true, include
   seen.id = 'a1b2c3d4-0000-4000-8000-000000000000'
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code #a1b2')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code #a1b2')
 })
 
 test('no sessionLabel by default', async ($, on) => {
@@ -312,7 +313,7 @@ test('no sessionLabel by default', async ($, on) => {
   seen.id = 'a1b2c3d4-0000-4000-8000-000000000000'
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: my-proj')
 })
 
 // ---- 0.5.0: session name in the title
@@ -321,7 +322,7 @@ test('a named session leads the title, the folder follows in brackets', async ($
   await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'fix login' } as never)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: fix login [my-proj]')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: fix login [my-proj]')
 })
 
 test('the name from SessionStart is used, an empty title keeps the last name', async ($, on) => {
@@ -330,7 +331,7 @@ test('the name from SessionStart is used, an empty title keeps the last name', a
   await $.classic.UserPromptSubmit({ prompt: 'go', session_title: '' } as never)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: fix login [my-proj]')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: fix login [my-proj]')
 })
 
 test('a named session without the folder', { options: { includeFolder: false } }, async ($, on) => {
@@ -338,7 +339,7 @@ test('a named session without the folder', { options: { includeFolder: false } }
   await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'fix login' } as never)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: fix login')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: fix login')
 })
 
 test('useSessionName off keeps the folder title', { options: { useSessionName: false } }, async ($, on) => {
@@ -346,7 +347,7 @@ test('useSessionName off keeps the folder title', { options: { useSessionName: f
   await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'fix login' } as never)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: my-proj')
 })
 
 test('ntfy title with a name is ASCII only', { options: { desktop: false, ntfyTopic: 't' } }, async ($, on) => {
@@ -354,7 +355,7 @@ test('ntfy title with a name is ASCII only', { options: { desktop: false, ntfyTo
   await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'fix café' } as never)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.ntfy[0].init.headers.Title).toBe('Claude Code: fix caf? [my-proj]')
+  expect(seen.ntfy[0]!.init.headers.Title).toBe('Claude Code: fix caf? [my-proj]')
 })
 
 // ---- 0.5.1: a managed policy bypasses the classic hooks, so the name comes from the transcript
@@ -375,8 +376,8 @@ test('no hook name: the title comes from the transcript, looked up by session id
   seen.transcript = `${T('old')}\n${T('fix login')}\n`
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: fix login [my-proj]')
-  expect(seen.shell[0].slice(-2)).toEqual(['/Users/x/.claude', '4d0e9023-0000-4000-8000-000000000000'])
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: fix login [my-proj]')
+  expect(seen.shell[0]!.slice(-2)).toEqual(['/Users/x/.claude', '4d0e9023-0000-4000-8000-000000000000'])
 })
 
 test('a hook name wins, the transcript is not read', async ($, on) => {
@@ -385,7 +386,7 @@ test('a hook name wins, the transcript is not read', async ($, on) => {
   await $.classic.UserPromptSubmit({ prompt: 'go', session_title: 'from hook' } as never)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: from hook [my-proj]')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: from hook [my-proj]')
   expect(seen.shell.length).toBe(0)
 })
 
@@ -393,7 +394,7 @@ test('no name anywhere: the folder title, and useSessionName off never reads the
   const seen = engine(on)
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: my-proj')
 })
 
 test('useSessionName off: the transcript is not read', { options: { useSessionName: false } }, async ($, on) => {
@@ -401,7 +402,7 @@ test('useSessionName off: the transcript is not read', { options: { useSessionNa
   seen.transcript = T('fix login')
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.desktop[0].at(-1)).toBe('Claude Code: my-proj')
+  expect(seen.desktop[0]!.at(-1)).toBe('Claude Code: my-proj')
   expect(seen.shell.length).toBe(0)
 })
 
@@ -411,7 +412,7 @@ test('the transcript lookup honours CLAUDE_CONFIG_DIR', async ($, on) => {
   seen.transcript = T('fix login')
   await $.turn.complete(done(30))
   await settle()
-  expect(seen.shell[0].at(-2)).toBe('/cfg')
+  expect(seen.shell[0]!.at(-2)).toBe('/cfg')
 })
 
 // ---- 0.4.0: webhook sink
@@ -455,10 +456,10 @@ test('webhook: an alert is posted to the URL as JSON, in the format the host cal
   await $.turn.complete(done(42))
   await settle()
   expect(seen.ntfy.length).toBe(1)
-  expect(seen.ntfy[0].url).toBe(SLACK)
-  expect(seen.ntfy[0].init.method).toBe('POST')
-  expect(seen.ntfy[0].init.headers['Content-Type']).toBe('application/json')
-  expect(JSON.parse(seen.ntfy[0].init.body)).toEqual({ text: '*Claude Code: my-proj*\nDone in 42s' })
+  expect(seen.ntfy[0]!.url).toBe(SLACK)
+  expect(seen.ntfy[0]!.init.method).toBe('POST')
+  expect(seen.ntfy[0]!.init.headers['Content-Type']).toBe('application/json')
+  expect(JSON.parse(seen.ntfy[0]!.init.body)).toEqual({ text: '*Claude Code: my-proj*\nDone in 42s' })
 })
 
 test('webhook: the event filter, quiet hours and dedupe apply to it', { options: { webhookUrl: DISCORD, notifyOn: 'error', ...OFF, quietHours: '' } }, async ($, on) => {

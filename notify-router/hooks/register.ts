@@ -60,8 +60,8 @@ export function formatReset(ms: number): string {
 export function inQuietHours(spec: string, minutes: number): boolean {
   const m = /^(\d\d):(\d\d)-(\d\d):(\d\d)$/.exec(spec.trim())
   if (!m) return false
-  const from = +m[1] * 60 + +m[2]
-  const to = +m[3] * 60 + +m[4]
+  const from = +m[1]! * 60 + +m[2]!
+  const to = +m[3]! * 60 + +m[4]!
   return from <= to ? minutes >= from && minutes < to : minutes >= from || minutes < to
 }
 
@@ -144,7 +144,7 @@ async function deliver($: EngineInterface, o: PluginOptions, last: Map<string, n
     results.forEach((r, i) => {
       // class and HTTP status only, never the URL (it carries the topic)
       const why = r.status === 'rejected' ? 'error' : (r.value as { ok?: boolean; status?: number })?.ok === false ? `HTTP ${(r.value as { status?: number }).status}` : ''
-      if (why) $.ui.log(`notify-router: ${sinks[i][0]} failed (${why})`, { to: 'debug' })
+      if (why) $.ui.log(`notify-router: ${sinks[i]![0]} failed (${why})`, { to: 'debug' })
     })
   } catch {
     // an alert must never break a turn

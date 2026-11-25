@@ -91,7 +91,7 @@ test('rows: capped per section, then trimmed from the bottom to fit', () => {
   const f = { turnId: 't', needs: [{ text: 'a' }, { text: 'b' }, { text: 'c' }], errors: [{ text: 'e' }], next: { text: 'n' }, todos: [{ text: 't' }], heads: [{ text: 'h' }] }
   const all = rows(f, 2, 99)
   expect(all.map(r => r.section)).toEqual(['needs', 'needs', 'errors', 'next', 'todos', 'heads'])
-  expect(all[1].more).toBe(1)
+  expect(all[1]!.more).toBe(1)
   expect(rows(f, 2, 4).map(r => r.section)).toEqual(['needs', 'needs', 'errors', 'next'])
   expect(rows(f, 2, 1).map(r => r.section)).toEqual(['needs'])
 })

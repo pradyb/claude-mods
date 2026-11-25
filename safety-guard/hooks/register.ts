@@ -50,12 +50,10 @@ export const register: Register = on => {
     return { deny: `${msg(why)}. If this is intended, ask the user to run it themselves.` }
   })
 
-  for (const tool of ['Read', 'Edit', 'Write'] as const) {
-    on('tool.call', { tool }, ($, e, next) => {
-      if (!isSecretPath(e.file_path)) return next(e)
-      const why = `${tool} of secret file ${e.file_path}`
-      $.ui.toast(msg(why))
-      return { deny: `${msg(why)}. If this is intended, ask the user to run it themselves.` }
-    })
-  }
+  on('tool.call', { tool: ['Read', 'Edit', 'Write'] }, ($, e, next) => {
+    if (!isSecretPath(e.file_path)) return next(e)
+    const why = `${e.tool} of secret file ${e.file_path}`
+    $.ui.toast(msg(why))
+    return { deny: `${msg(why)}. If this is intended, ask the user to run it themselves.` }
+  })
 }

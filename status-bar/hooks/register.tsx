@@ -44,7 +44,7 @@ export function parseStatus(out: string): Git | undefined {
   const [head, ...files] = out.split('\n').filter(Boolean)
   if (!head?.startsWith('## ')) return undefined
   const h = head.slice(3)
-  const branch = h.startsWith('HEAD (no branch)') ? 'detached' : /^(?:No commits yet on|Initial commit on) (.+)$/.exec(h)?.[1] ?? h.split(/\.\.\.| /)[0]
+  const branch = h.startsWith('HEAD (no branch)') ? 'detached' : /^(?:No commits yet on|Initial commit on) (.+)$/.exec(h)?.[1] ?? h.split(/\.\.\.| /)[0] ?? h
   const g: Git = { branch, staged: 0, modified: 0, untracked: 0, ahead: Number(/ahead (\d+)/.exec(h)?.[1] ?? 0), behind: Number(/behind (\d+)/.exec(h)?.[1] ?? 0), }
   for (const l of files) {
     if (l.startsWith('??')) g.untracked++
