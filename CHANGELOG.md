@@ -6,6 +6,11 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 - Renamed from `claude-mods` to `pradyb-mods`, so the name can't clash with another marketplace of the same name. The repository is unchanged. Installs are now `<mod>@pradyb-mods`; see the README for how to move over.
 
+## justice-league
+
+### 0.9.0
+- Initial release: a dark hero-team theme with a night-city backdrop (original, comic-style heroes), a quiet ambient soundtrack, and comic-panel styling for your prompts and Claude's replies. Clicks, turn starts, tool calls, compaction and turn ends each set off an animation.
+
 ## turn-summary
 
 ### 0.1.2
