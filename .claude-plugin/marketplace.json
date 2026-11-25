@@ -54,6 +54,11 @@
       "name": "snippets",
       "source": "./snippets",
       "description": "Text replacement for prompts: type ;name and it is expanded to the saved text on Enter. Manage snippets with /snip; stored in ~/.claude/snippets.json."
+    },
+    {
+      "name": "justice-league",
+      "source": "./justice-league",
+      "description": "Dark hero-team theme for the desktop app: a night-city backdrop with comic-style heroes, a quiet soundtrack and comic-panel messages, with an animation for clicks, turn starts, tool calls and turn ends."
     }
   ],
   "description": "Mods (plugins) for Claude Code."
