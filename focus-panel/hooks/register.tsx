@@ -69,18 +69,18 @@ export function extract(answer: string): Found {
       return
     }
     const h = HEADS.exec(line)
-    if (h) return void f.heads.push({ text: clean(h[1]) })
+    if (h) return void f.heads.push({ text: clean(h[1]!) })
     const x = FAIL.exec(line)
-    if (x) return NOTHING.test(x[1].trim()) ? undefined : add('errors', x[1])
+    if (x) return NOTHING.test(x[1]!.trim()) ? undefined : add('errors', x[1]!)
     const w = WARN.exec(line)
-    if (w) return void add('heads', w[1])
+    if (w) return void add('heads', w[1]!)
     const b = BULLET.exec(line)
-    if (b && section) return b[1] && b[1] !== ' ' ? undefined : add(section, b[2]) // a ticked box is done
+    if (b && section) return b[1] && b[1] !== ' ' ? undefined : add(section, b[2]!) // a ticked box is done
     const t = TODO.exec(line)
-    if (t) return void f.todos.push({ text: clean(t[1]) })
+    if (t) return void f.todos.push({ text: clean(t[1]!) })
     if (b) return
     const head = HEAD.exec(line.trim())
-    section = head && !DONE.test(head[1] ?? head[2] ?? head[3]) ? HEAD_KIND.find(([, re]) => re.test(head[1] ?? head[2] ?? head[3]))?.[0] : undefined // prose ends a section
+    section = head && !DONE.test(head[1] ?? head[2] ?? head[3]!) ? HEAD_KIND.find(([, re]) => re.test(head[1] ?? head[2] ?? head[3]!))?.[0] : undefined // prose ends a section
   })
   f.todos = f.todos.filter(t => t.text !== f.next?.text)
   const tail = lines.filter(l => l.trim()).slice(-14)
@@ -129,8 +129,8 @@ export function rows(f: Focus, cap: number, budget: number): Row[] {
     )
   }
   while (out.length > budget && out.length > 1) {
-    const last = out[out.length - 1].section
-    while (out.length > 1 && out[out.length - 1].section === last) out.pop()
+    const last = out[out.length - 1]!.section
+    while (out.length > 1 && out[out.length - 1]!.section === last) out.pop()
   }
   return out
 }
