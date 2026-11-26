@@ -1,5 +1,5 @@
 // The backdrop, as one SVG string. Each side is drawn in 1600 x 900 units and pinned to its bottom corner at
-// half the window's width, so the sides shrink in a narrow window and never collide or crop; what follows
+// half the window's width (on desktop, the gutter beside the chat column), so the sides shrink in a narrow window and never collide or crop; what follows
 // a click is placed in percentages of the window, which is exact at any shape. Original art: a city on the left with a caped
 // flier, a cowled watcher and a warrior on its rooftops, an orbital station, a ring-bearer, a half-machine hero and a sea king in the surf on the right. No publisher emblems; the heroes are evoked by colour and shape.
 
@@ -137,12 +137,20 @@ const STARS = (() => {
   return out
 })()
 
+// On desktop each side shrinks to fit the gutter beside the chat column, so no figure sits under it on a
+// laptop. A side's natural width is min(50vw, 640 / 900 of the height); the factor is gutter over that,
+// at most 1. An engine without length division in CSS drops the rule and draws the sides as before.
+// ponytail: the column's width is a guess (the app does not say it); widen COLUMN if figures still hide.
+const COLUMN = 800
+const GUTTER = `clamp(15vw, 50vw - ${COLUMN / 2}px, 50vw)`
+const FIT = `min(1, calc(${GUTTER} / min(50vw, ${((640 / 900) * 100).toFixed(2)}vh)))`
+
 type Drawn = { css: string; left: string; right: string; top: string }
 
 // Each redraw reloads the drawing and restarts its animations, so every animation is given a negative
 // delay: an effect resumes at its own age, and an idle loop at the phase the clock puts it in.
 // `left` and `right` are drawn in a side's units; `top` in percentages of the window.
-const effect = (fx: Fx, age: number): Drawn => {
+const effect = (fx: Fx, age: number, fit: boolean): Drawn => {
   const { kind, n } = fx
   const x = fx.x.toFixed(1)
   const y = fx.y.toFixed(1)
@@ -155,7 +163,7 @@ const effect = (fx: Fx, age: number): Drawn => {
 
   // A point of a side, in window lengths: each side is scaled by SIDE and pinned to its bottom corner.
   // Viewport units read the drawing's own box, so this holds at any window shape.
-  const SIDE = 'min(50vw / 640, 100vh / 900)'
+  const SIDE = fit ? `min(${GUTTER} / 640, 100vh / 900)` : 'min(50vw / 640, 100vh / 900)'
   const leftX = (px: number) => `calc(${px} * ${SIDE})`
   const rightX = (px: number) => `calc(100vw - ${1600 - px} * ${SIDE})`
   const sideY = (py: number) => `calc(100vh - ${900 - py} * ${SIDE})`
@@ -246,10 +254,12 @@ const effect = (fx: Fx, age: number): Drawn => {
 /**
  * The whole scene at the moment `now` (epoch milliseconds). `working` is true while Claude is mid-turn:
  * the station's beacon turns green and quickens. Effects that have run their length are left out.
+ * `fit` shrinks the sides into the gutters beside the chat column: desktop only, since a scene sized by
+ * viewport units may be held still on mobile.
  */
-export const scene = (fxs: readonly Fx[], working: boolean, now: number): string => {
+export const scene = (fxs: readonly Fx[], working: boolean, now: number, fit = false): string => {
   const live = fxs.filter(fx => now - fx.t0 < LENGTH[fx.kind] * 1000)
-  const drawn = live.map(fx => effect(fx, Math.max(0, (now - fx.t0) / 1000)))
+  const drawn = live.map(fx => effect(fx, Math.max(0, (now - fx.t0) / 1000), fit))
   const layer = (key: 'css' | 'left' | 'right' | 'top') => drawn.map(d => d[key]).join('')
   const t = now / 1000
   // An idle loop, resumed at the phase the clock gives it.
@@ -261,13 +271,14 @@ export const scene = (fxs: readonly Fx[], working: boolean, now: number): string
   const fly = live.findLast(fx => fx.kind === 'fly')
   const hover = fly ? ` style="animation:hd${fly.n} 2.4s -${((now - fly.t0) / 1000).toFixed(2)}s linear forwards"` : ''
   const hide = fly ? `@keyframes hd${fly.n}{0%{opacity:0}92%{opacity:0}100%{opacity:1}}` : ''
-  // A side: its half of the window, its 640 x 900 slice of the scene pinned to a bottom corner.
-  const side = (x: string, viewBox: string, pin: string, body: string) =>
-    `<svg x="${x}" width="50%" height="100%" viewBox="${viewBox}" preserveAspectRatio="${pin}" overflow="visible">${body}</svg>`
+  // A side: its half of the window, its 640 x 900 slice of the scene pinned to a bottom corner, and with
+  // `fit` scaled down from that corner (`.sl`, `.sr`) into the gutter.
+  const side = (cls: string, x: string, viewBox: string, pin: string, body: string) =>
+    `<g class="${cls}"><svg x="${x}" width="50%" height="100%" viewBox="${viewBox}" preserveAspectRatio="${pin}" overflow="visible">${body}</svg></g>`
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
 <style>
-.fx{transform-box:fill-box;transform-origin:center}.fxb{transform-box:fill-box;transform-origin:50% 100%}
+${fit ? `.sl,.sr{transform-box:view-box;scale:${FIT}}.sl{transform-origin:0 100%}.sr{transform-origin:100% 100%}\n` : ''}.fx{transform-box:fill-box;transform-origin:center}.fxb{transform-box:fill-box;transform-origin:50% 100%}
 .wv{${loop('wv', 9, 0, 'linear')}}
 .t0{${loop('tw', 7)}}.t1{${loop('tw', 9, 2)}}.t2{${loop('tw', 11, 4)}}
 .w1{${loop('fk', 5)}}.w2{${loop('fk', 7, 1)}}.w3{${loop('fk', 6, 2)}}
@@ -297,6 +308,7 @@ ${hide}${layer('css')}
 </defs>
 <svg width="100%" height="100%" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><g fill="#cfd8ff" opacity=".7">${STARS}</g></svg>
 ${side(
+  'sl',
   '0',
   '0 0 640 900',
   'xMinYMax meet',
@@ -311,6 +323,7 @@ ${side(
 ${layer('left')}`,
 )}
 ${side(
+  'sr',
   '50%',
   '960 0 640 900',
   'xMaxYMax meet',

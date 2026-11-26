@@ -184,7 +184,7 @@ export const register: Register = on => {
 
     return (
       <Svg
-        source={scene(fxs, working, Date.now())}
+        source={scene(fxs, working, Date.now(), e.surface === 'desktop')}
         alt="A night city with a caped flier, a cowled watcher and a warrior with a gold lasso on the left, and an orbiting station with a green ring-bearer, a hovering half-machine hero and a sea king in the surf on the right"
       />
     )

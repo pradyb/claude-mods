@@ -26,7 +26,7 @@ A mod runs with your permissions, so read what it does first. `claude plugin val
 | [worktree-hints](worktree-hints) | 0.1.0 | In a worktree session, tells Claude up front which commands the worktree guard refuses, so it doesn't burn retries on them. |
 | [turn-summary](turn-summary) | 0.1.2 | After each turn, a summary under the prompt: how long it took, tools called, subagents and background agents started. Stays until your next prompt. |
 | [snippets](snippets) | 0.1.1 | Text replacement: type `;name` and it is expanded to saved text when you press Enter. Add, list and remove with `/snip`; stored in `~/.claude/snippets.json`. |
-| [justice-league](justice-league) | 0.9.0 | A dark hero-team theme for the desktop app: a night-city backdrop with comic-style heroes, a quiet soundtrack and comic-panel messages, with an animation for clicks, turn starts, tool calls and turn ends. |
+| [justice-league](justice-league) | 0.9.1 | A dark hero-team theme for the desktop app: a night-city backdrop with comic-style heroes, a quiet soundtrack and comic-panel messages, with an animation for clicks, turn starts, tool calls and turn ends. |
 
 ## Versioning
 
