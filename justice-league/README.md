@@ -16,7 +16,7 @@ Or in one step, from a session: `/plugin install justice-league --marketplace pr
 ## What you get
 
 - **Colours:** a navy night-sky palette (dark only) with a hero-blue accent, cape red for errors, ring green for success and lasso gold for warnings.
-- **Backdrop:** a night city on the left (a caped flier, a cowled watcher and a lasso warrior on the rooftops) and an orbital station on the right (a green ring-bearer, a half-machine hero, a sea king in the surf). Each side shrinks with the window, so they never collide or crop.
+- **Backdrop:** a night city on the left (a caped flier, a cowled watcher and a lasso warrior on the rooftops) and an orbital station on the right (a green ring-bearer, a half-machine hero, a sea king in the surf). Each side shrinks with the window, so they never collide or crop; on the desktop app each side also fits the gutter beside the chat column, so no figure hides behind it on a laptop screen.
 - **Messages:** your prompts in a gold caption box, Claude's replies in an inked navy panel, both on solid grounds so they stay readable over the figures.
 - **Sound:** a low hum with the odd far bell, and one short cue each for send, tool call, done, ask, error, compaction and click.
 

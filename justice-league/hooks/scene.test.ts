@@ -31,6 +31,14 @@ test('effects overlap, and a finished one is dropped', async () => {
   expect(idle).toBe(scene([], false, NOW))
 })
 
+test('on desktop the sides shrink into the gutters, elsewhere they keep their half', async () => {
+  const fit = scene([fx('fly', 5)], false, NOW, true)
+
+  expect(fit.includes('.sl,.sr{transform-box:view-box;scale:min(1,')).toBe(true)
+  expect(fit.includes('50vw - 400px')).toBe(true)
+  expect(scene([], false, NOW).includes('scale:min(')).toBe(false)
+})
+
 test('the look is set once, with sound and style', async ($, on) => {
   const sets: { sound?: unknown; style?: unknown }[] = []
 

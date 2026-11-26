@@ -8,6 +8,9 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## justice-league
 
+### 0.9.1
+- On the desktop app, each side of the backdrop now fits the space beside the chat column, so no hero hides behind the conversation on a laptop-size screen.
+
 ### 0.9.0
 - Initial release: a dark hero-team theme with a night-city backdrop (original, comic-style heroes), a quiet ambient soundtrack, and comic-panel styling for your prompts and Claude's replies. Clicks, turn starts, tool calls, compaction and turn ends each set off an animation.
 
