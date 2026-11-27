@@ -6,6 +6,11 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 - Renamed from `claude-mods` to `pradyb-mods`, so the name can't clash with another marketplace of the same name. The repository is unchanged. Installs are now `<mod>@pradyb-mods`; see the README for how to move over.
 
+## fireteam
+
+### 0.1.0
+- Initial release: a military-shooter HUD theme ported from the Herdr Fireteam layout. The side columns hold a minimap radar, an operator card, banners for big events, rank and XP, scorestreak charge, the kill feed and daily challenges; a compass runs across the top. A `/fireteam` panel calls ready scorestreaks and sets the loadout (nine weapons, camos unlocked by weapon mastery, nine perks that change the HUD) and the colour pack (MODERN, NVG, ARCTIC, TOXIC, HAZARD). `/fireteam debrief` prints the stats. Only your own prompts score. Original names, art and sound: no game's names, logos or assets.
+
 ## justice-league
 
 ### 0.9.1

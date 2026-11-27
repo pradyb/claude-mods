@@ -1,0 +1,12 @@
+{
+  "name": "fireteam",
+  "version": "0.1.0",
+  "description": "Military-shooter HUD theme for the desktop app: radar, operator card, scorestreaks you call, kill feed, daily challenges, loadout with perks, weapon mastery and five colour packs, all earned from Claude's real tool calls",
+  "author": {
+    "name": "Pradeep Kumar Balakrishnan"
+  },
+  "homepage": "https://github.com/pradyb/claude-mods/tree/main/fireteam",
+  "repository": "https://github.com/pradyb/claude-mods",
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}
