@@ -8,6 +8,12 @@ Each mod is versioned on its own (semver, in `<mod>/.claude-plugin/plugin.json`)
 
 ## fireteam
 
+### 0.2.0
+- Your weapon fires across the window when a prompt is accepted: a burst of tracers from the left edge to a hitmarker in the right gutter, shaped by the weapon (a rocket for the RPG-7, pellets for the M870, one fast round for the SVD). The prompt is not changed, and slash commands and blocked prompts don't fire.
+- The operator card shows AMMO (context window left) and FUEL (5-hour limit left), the git branch, minutes on the running contract and the session cost.
+- Subagents join as squadmates (ALPHA, BRAVO, ...): a lit blip on the radar and `SQUAD n` on the card while they run.
+- `/fireteam debrief` adds a session score and each subagent's damage, damage taken and accuracy, with an MVP.
+
 ### 0.1.0
 - Initial release: a military-shooter HUD theme ported from the Herdr Fireteam layout. The side columns hold a minimap radar, an operator card, banners for big events, rank and XP, scorestreak charge, the kill feed and daily challenges; a compass runs across the top. A `/fireteam` panel calls ready scorestreaks and sets the loadout (nine weapons, camos unlocked by weapon mastery, nine perks that change the HUD) and the colour pack (MODERN, NVG, ARCTIC, TOXIC, HAZARD). `/fireteam debrief` prints the stats. Only your own prompts score. Original names, art and sound: no game's names, logos or assets.
 

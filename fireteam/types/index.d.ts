@@ -59,6 +59,22 @@ export type Hud = {
   pending: Pending
 }
 
+/** Live readings from the session, gathered when the HUD is redrawn; any of them can be missing. */
+export type Live = {
+  /** Context window used, in percent, and its tokens. */
+  ctx?: number
+  tokens?: number
+  /** The 5-hour rate limit used, in percent. */
+  fuel?: number
+  /** Session cost in US dollars. */
+  cost?: number
+  branch?: string
+  /** When the running contract began (epoch milliseconds). */
+  since?: number
+  /** Subagents running now. */
+  squad: number
+}
+
 /** What the backdrop draws: a snapshot of the HUD, written at most every 1.5 s or on a big event. */
 export type View = {
   working: boolean
@@ -86,6 +102,7 @@ export type View = {
   lowProfile: boolean
   spotter: boolean
   pack: number
+  live?: Live
 }
 
 declare module 'claude-code' {

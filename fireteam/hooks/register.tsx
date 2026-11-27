@@ -1,13 +1,14 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, ThemeSetArgs } from 'claude-code'
 
-import type { Day, Hud, Loadout } from '../types'
+import type { Day, Hud, Live, Loadout } from '../types'
 import { makeColors } from './make-colors.js'
 import { type Fx, LENGTH, scene } from './scene'
 import {
-  ACT, CAMOS, DAILY_REWARD, PACKS, PERKS, type Pack, RANKS, STREAKS, type Shot, WEAPONS, banner, camoOpen, dayFrom,
-  feed, feedFor, freshHud, freshLoadout, freshPending, hasPerk, isShot, levelOf, medalsFor, mix, needOf, newlyDone,
-  operatorOf, rankOf, shotOf, targetOf, todays, unlocked, viewOf,
+  ACT, CAMOS, DAILY_REWARD, type Mate, PACKS, PERKS, type Pack, RANKS, STREAKS, type Shot, WEAPONS, banner, camoOpen,
+  crewLines, dayFrom, feed, feedFor, freshHud, freshLoadout, freshPending, hasPerk, isShot, levelOf, mateName,
+  medalsFor, mix, needOf, newlyDone, operatorOf, rankOf, runningMates, scoreOf, shotOf, targetOf, todays, unlocked,
+  viewOf, weaponOf,
 } from './score'
 
 type Dollar = EngineInterface
@@ -134,20 +135,63 @@ const applyLook = async ($: Dollar, pack: number, silent: boolean) => {
 // ------------------------------------------------------------------ state
 // The tags decline what an older version of the mod left in this session.
 const hud = atom({ plugin: 'fireteam', key: 'hud' } as const, freshHud(), { shape: 'hud-3' })
-const look = atom({ plugin: 'fireteam', key: 'look' } as const, null, { shape: 'look-2' })
+const look = atom({ plugin: 'fireteam', key: 'look' } as const, null, { shape: 'look-3' })
 
-// Backdrop effects: module variables, reset on reload, which is fine for a toy. Up to four at once.
-const MOST = 4
+// Backdrop effects: module variables, reset on reload, which is fine for a toy. Up to six at once.
+const MOST = 6
 let fxs: Fx[] = []
 let count = 0
 let lastPublish = 0
 let lastDmg = 0
+// The squad (subagents, by id), when the running contract began, and the git branch (looked up at most every 10 s).
+const crew = new Map<string, Mate>()
+let since: number | null = null
+let branch: { cwd: string; at: number; name?: string } = { cwd: '', at: 0 }
 
-const play = (kind: Fx['kind'], x = 0, y = 0) => {
+const play = (kind: Fx['kind'], x = 0, y = 0, g?: string) => {
   const now = Date.now()
 
   count += 1
-  fxs = [...fxs.filter(fx => now - fx.t0 < LENGTH[fx.kind] * 1000), { kind, x, y, n: count, t0: now }].slice(-MOST)
+  fxs = [...fxs.filter(fx => now - fx.t0 < LENGTH[fx.kind] * 1000), { kind, x, y, n: count, t0: now, g }].slice(-MOST)
+}
+
+/** A subagent's record, made on first sight. The oldest are forgotten past 50. */
+const mate = (id: string): Mate => {
+  let m = crew.get(id)
+
+  if (m === undefined) {
+    m = { name: mateName(crew.size), seen: Date.now(), live: true, hits: 0, errs: 0 }
+    crew.set(id, m)
+    if (crew.size > 50) {
+      crew.delete(crew.keys().next().value!)
+    }
+  }
+
+  return m
+}
+
+/** Readings the backdrop shows beside the HUD's own counts: context, fuel, cost, branch, time on task, squad. */
+const liveOf = async ($: Dollar, now: number): Promise<Live> => {
+  const live: Live = { squad: runningMates(crew.values(), now), ...(since === null ? {} : { since }) }
+
+  try {
+    const [usage, cwd] = await Promise.all([$.session.usage().catch(() => undefined), $.session.cwd().catch(() => undefined)])
+
+    live.ctx = usage?.context?.percent
+    live.tokens = usage?.context?.tokens
+    live.cost = usage?.cost?.usd
+    live.fuel = usage?.rateLimits?.find(r => r.kind === 'five_hour')?.percentUsed
+    if (cwd !== undefined && (cwd !== branch.cwd || now - branch.at > 10_000)) {
+      const r = await $.process.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], { cwd }).catch(() => undefined)
+
+      branch = { cwd, at: now, name: r?.exitCode === 0 ? r.stdout.trim() || undefined : undefined }
+    }
+    live.branch = branch.name
+  } catch (error) {
+    $.ui.log(String(error))
+  }
+
+  return live
 }
 
 /**
@@ -166,8 +210,9 @@ const publish = async ($: Dollar, force = false, fx?: Fx['kind']) => {
     play(fx)
   }
   const st = await read($, hud)
+  const live = await liveOf($, now)
 
-  await update($, look, () => viewOf(st))
+  await update($, look, () => ({ ...viewOf(st), live }))
 
   return true
 }
@@ -223,12 +268,14 @@ const debrief = (st: Hud) => {
   const rank = rankOf(st.kills + st.bonus)
   const shots = st.hits + st.errs
   const w = st.loadout
+  const mates = crewLines([...crew.values()])
 
   return [
-    `DEBRIEF · [${st.unit}] ${st.call} · ${rank.name} (XP ${rank.xp}/100)`,
+    `DEBRIEF · [${st.unit}] ${st.call} · ${rank.name} (XP ${rank.xp}/100) · SCORE ${scoreOf(st)}`,
     `Contracts: ${st.cleared} this session, ${st.day.clears} today, ${st.kills} career · medals today ${st.day.medals}`,
     `Loadout: ${w.gun} L${levelOf(st.mastery[w.gun] ?? 0)} · ${w.camo} · ${w.perks.filter(Boolean).join(', ') || 'no perks'}`,
     `Damage ${st.hits} · Taken ${st.errs} · Accuracy ${shots ? Math.round((100 * st.hits) / shots) : 0}% · Recon ${st.reads} · Drones ${st.drones} · Streak ${st.streak}`,
+    ...(mates.length ? ['Squad:', ...mates] : []),
     ...todays(st.day.d).map(ch => `  ${st.day.done.includes(ch.k) ? '✔' : '·'} ${ch.n} ${Math.min(ch.need, st.day[ch.k])}/${ch.need}`),
   ].join('\n')
 }
@@ -349,29 +396,57 @@ export const register: Register = on => {
   // Only a person's prompt makes a contract: task notifications, scheduled runs and other plugins' prompts
   // run turns that score nothing.
   on('prompt.submit', async ($, e, next) => {
+    let gun: string | null = null
+
     try {
       const person = e.origin.kind === 'composer' || e.origin.kind === 'bridge' || e.origin.kind === 'sdk'
 
       // A slash command (this mod's own /fireteam among them) may start no turn, so it never arms.
       if (person && e.isMeta !== true && e.command === undefined && e.text.trim() !== '') {
-        await update($, hud, st => ({ ...st, armed: true, target: targetOf(e.text) }))
+        const st = await update($, hud, s => ({ ...s, armed: true, target: targetOf(e.text) }))
+
+        gun = weaponOf(st.loadout.gun).i
       }
     } catch (error) {
       $.ui.log(String(error))
     }
+    // The prompt itself passes through untouched.
     const result = await next(e)
 
     if (result.drop !== undefined) {
       await update($, hud, st => ({ ...st, armed: false })).catch(error => $.ui.log(String(error)))
+    } else if (gun !== null) {
+      // The prompt was accepted: fire the weapon across the window.
+      try {
+        play('fire', 0, 0, gun)
+        await publish($, true)
+      } catch (error) {
+        $.ui.log(String(error))
+      }
     }
 
     return result
   })
 
   on('turn.start', async ($, e, next) => {
-    if (e.agentId === undefined) {
+    if (e.agentId !== undefined) {
+      // A subagent joins the squad.
+      try {
+        const m = mate(e.agentId)
+
+        m.live = true
+        m.seen = Date.now()
+        await publish($, true)
+      } catch (error) {
+        $.ui.log(String(error))
+      }
+    } else {
       try {
         const st = await read($, hud)
+
+        if (st.armed) {
+          since = Date.now()
+        }
 
         // The armed prompt's turn becomes the contract; any other turn leaves none.
         await update($, hud, s => ({
@@ -394,13 +469,32 @@ export const register: Register = on => {
   // Every tool call of the main loop: the live action before, the hit or damage after. This hook sits in
   // front of every call, so nothing here may stop one, and the result goes back untouched.
   on('tool.call', async ($, e, next) => {
+    const command = typeof (e as { command?: unknown }).command === 'string' ? (e as { command: string }).command : ''
+
     if (e.agentId !== undefined) {
-      return next(e)
+      // A subagent's call counts for its own record, not the operator's.
+      const result = await next(e)
+
+      try {
+        const m = mate(e.agentId)
+
+        m.live = true
+        m.seen = Date.now()
+        if (result.isError === true) {
+          m.errs += 1
+        } else if (isShot(shotOf(e.tool, command))) {
+          m.hits += 1
+        }
+        await publish($)
+      } catch (error) {
+        $.ui.log(String(error))
+      }
+
+      return result
     }
     let shot: Shot = 'other'
 
     try {
-      const command = typeof (e as { command?: unknown }).command === 'string' ? (e as { command: string }).command : ''
       const t = Date.now()
 
       shot = shotOf(e.tool, command)
@@ -511,7 +605,18 @@ export const register: Register = on => {
   // nothing on an interrupt. Every end adds the turn's counts to the store.
   on('turn.complete', async ($, e, next) => {
     if (e.agentId !== undefined) {
+      try {
+        mate(e.agentId).live = false
+        await publish($, true)
+      } catch (error) {
+        $.ui.log(String(error))
+      }
+
       return next(e)
+    }
+    since = null
+    for (const m of crew.values()) {
+      m.live = false
     }
     try {
       const t = Date.now()

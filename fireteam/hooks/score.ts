@@ -294,3 +294,30 @@ export const viewOf = (st: Hud): View => {
     pack: st.pack,
   }
 }
+
+// ------------------------------------------------------------------ the squad: subagents as squadmates
+export const NATO = ['ALPHA', 'BRAVO', 'CHARLIE', 'DELTA', 'ECHO', 'FOXTROT']
+export type Mate = { name: string; seen: number; live: boolean; hits: number; errs: number }
+
+/** The next squadmate's callsign: ALPHA to FOXTROT, then ALPHA2 and on. */
+export const mateName = (i: number) => `${NATO[i % NATO.length]}${i >= NATO.length ? Math.floor(i / NATO.length) + 1 : ''}`
+
+/** A subagent counts as running while it is live and has done something in the last 5 minutes. */
+export const runningMates = (crew: Iterable<Mate>, now: number) => [...crew].filter(m => m.live && now - m.seen < 300_000).length
+
+/** The session's score: contracts, hits, recon and drones count for it; damage taken against it. */
+export const scoreOf = (st: Pick<Hud, 'cleared' | 'hits' | 'errs' | 'reads' | 'drones'>) =>
+  Math.max(0, st.cleared * 100 + st.hits * 10 + st.reads * 2 + st.drones * 25 - st.errs * 20)
+
+/** Debrief lines for the squadmates: damage, taken, accuracy each, and the MVP (most damage, if any). */
+export const crewLines = (crew: readonly Mate[]) => {
+  if (!crew.length) {
+    return []
+  }
+  const best = crew.reduce((a, m) => (m.hits > a.hits ? m : a))
+
+  return [
+    ...crew.map(m => `  ${m.name}: damage ${m.hits} · taken ${m.errs} · accuracy ${m.hits + m.errs ? Math.round((100 * m.hits) / (m.hits + m.errs)) : 0}%`),
+    ...(best.hits > 0 ? [`  MVP: ${best.name}`] : []),
+  ]
+}

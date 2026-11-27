@@ -3,8 +3,8 @@ import { expect, test } from 'claude-code/testing'
 import { THEMES } from './register'
 import { type Fx, LENGTH, plain, scene } from './scene'
 import {
-  PACKS, STREAKS, camoOpen, feedFor, freshDay, freshHud, freshLoadout, levelOf, medalsFor, needOf, newlyDone, rankOf,
-  shotOf, todays, unlocked, viewOf,
+  PACKS, STREAKS, camoOpen, crewLines, feedFor, freshDay, freshHud, freshLoadout, levelOf, mateName, medalsFor, needOf,
+  newlyDone, rankOf, runningMates, scoreOf, shotOf, todays, unlocked, viewOf,
 } from './score'
 
 const NOW = 1_700_000_000_000
@@ -82,6 +82,55 @@ test('ranks, streak costs, medals, challenges and mastery', async () => {
   expect(camoOpen(freshLoadout(), { M4A1: 30 }, 'GOLD')).toBe(false)
 })
 
+test('the card shows ammo, fuel, branch, cost, time on task and the squad', async () => {
+  const live = { ctx: 92, fuel: 40, cost: 1.5, branch: 'feat/x', since: NOW - 125_000, squad: 2 }
+  const svg = scene([], { ...VIEW, live }, NOW)
+
+  expect(svg.includes('>8%<')).toBe(true) // 8% of the context left
+  expect(svg.includes('>60%<')).toBe(true) // 60% of the 5-hour limit left
+  expect(svg.includes('BR FEAT/X · 2M')).toBe(true)
+  expect(svg.includes('USD 1.50')).toBe(true)
+  expect(svg.includes('SQUAD 2')).toBe(true)
+  expect(svg.includes('class="sq"')).toBe(true)
+  // Nothing known yet: dashes, and no cost or branch.
+  const bare = scene([], { ...VIEW, live: { squad: 0 } }, NOW)
+
+  expect(bare.includes('>--<')).toBe(true)
+  expect(/USD|SQUAD|BR /.test(bare)).toBe(false)
+})
+
+test('every weapon fires bullets from the left edge to the right gutter', async () => {
+  for (const g of ['ar', 'ak', 'bullpup', 'smg', 'lmg', 'pistol', 'shotgun', 'sniper', 'launcher', 'unknown']) {
+    const svg = scene([{ kind: 'fire', x: 0, y: 0, n: 7, g, t0: NOW - 100 }], VIEW, NOW)
+
+    expect(svg.includes('animation:bl7 ')).toBe(true)
+    expect(/NaN|undefined/.test(svg)).toBe(false)
+  }
+  expect(scene([{ kind: 'fire', x: 0, y: 0, n: 7, g: 'shotgun', t0: NOW }], VIEW, NOW).split('animation:bl7 ').length - 1).toBe(5)
+})
+
+test('the squad: callsigns, who is running, the score and the MVP', async () => {
+  expect(mateName(0)).toBe('ALPHA')
+  expect(mateName(6)).toBe('ALPHA2')
+  const crew = [
+    { name: 'ALPHA', seen: NOW, live: true, hits: 5, errs: 1 },
+    { name: 'BRAVO', seen: NOW - 400_000, live: true, hits: 9, errs: 0 },
+    { name: 'CHARLIE', seen: NOW, live: false, hits: 0, errs: 0 },
+  ]
+
+  expect(runningMates(crew, NOW)).toBe(1) // BRAVO went quiet, CHARLIE is done
+  expect(crewLines(crew)).toEqual([
+    '  ALPHA: damage 5 · taken 1 · accuracy 83%',
+    '  BRAVO: damage 9 · taken 0 · accuracy 100%',
+    '  CHARLIE: damage 0 · taken 0 · accuracy 0%',
+    '  MVP: BRAVO',
+  ])
+  expect(crewLines([])).toEqual([])
+  expect(crewLines([crew[2]!]).some(l => l.includes('MVP'))).toBe(false)
+  expect(scoreOf({ cleared: 2, hits: 10, errs: 1, reads: 5, drones: 1 })).toBe(200 + 100 + 10 + 25 - 20)
+  expect(scoreOf({ cleared: 0, hits: 0, errs: 9, reads: 0, drones: 0 })).toBe(0)
+})
+
 // ---------------------------------------------------------------- hooks
 
 type Store = Map<string, unknown>
@@ -98,7 +147,7 @@ const engine = (on: Parameters<Body>[1], stored: Store, failTools = false) => {
   on('theme.set', () => ({ value: { isDrawn: true, requestId: 'backdrop' } }))
   on('command.register', () => ({ value: { command: 'fireteam' } }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
-  on('prompt.submit', (_, e) => e)
+  on('prompt.submit', (_, e) => (e.text === 'blocked' ? { drop: 'blocked' } : e))
   on('turn.start', (_, e) => ({ turnId: e.turnId }))
   on('tool.call', () => (failTools ? { isError: true as const, result: 'boom', text: 'boom' } : { result: {} }))
   on('turn.complete', () => ({ text: '' }))
@@ -234,4 +283,44 @@ test('a commit marks the backdrop with a hitmarker in the redraw it sets off', a
 
   expect(String((svg?.props as { source?: string } | undefined)?.source ?? '').includes('animation:pp')).toBe(true)
   await mine.unmount()
+})
+
+test('an accepted prompt fires the weapon', async ($, on) => {
+  engine(on, new Map())
+  await $.session.start({ cwd: '/work/app', surface: 'desktop', isInteractive: true })
+  await $.prompt.submit({ text: 'fix the bug', wait: true, origin: { kind: 'composer' } })
+
+  const mine = await $.ui.mount({ plugin: 'fireteam', surface: 'desktop', component: 'Backdrop', props: { scene: 'fireteam', plugin: 'fireteam', glass: false } })
+  const svg = await mine.find({ type: 'Svg' })
+
+  expect(String((svg?.props as { source?: string } | undefined)?.source ?? '').includes('animation:bl')).toBe(true)
+  await mine.unmount()
+})
+
+test('a slash command or a dropped prompt fires nothing', async ($, on) => {
+  engine(on, new Map())
+  await $.session.start({ cwd: '/work/app', surface: 'desktop', isInteractive: true })
+  await $.prompt.submit({ text: '/fireteam', wait: true, origin: { kind: 'composer' }, command: { name: 'fireteam', args: '' } })
+  await $.prompt.submit({ text: 'blocked', wait: true, origin: { kind: 'composer' } })
+
+  const mine = await $.ui.mount({ plugin: 'fireteam', surface: 'desktop', component: 'Backdrop', props: { scene: 'fireteam', plugin: 'fireteam', glass: false } })
+  const svg = await mine.find({ type: 'Svg' })
+
+  expect(String((svg?.props as { source?: string } | undefined)?.source ?? '').includes('animation:bl')).toBe(false)
+  await mine.unmount()
+})
+
+test('a subagent joins the squad and the debrief names it and the score', async ($, on) => {
+  engine(on, new Map())
+  await $.session.start({ cwd: '/work/app', surface: 'desktop', isInteractive: true })
+  await $.prompt.submit({ text: 'use a helper', wait: true, origin: { kind: 'composer' } })
+  await $.turn.start({ text: 'use a helper', turnId: 's1' })
+  await $.turn.start({ text: 'helper', turnId: 's1a', agentId: 'a1' })
+  await $.tool.call({ tool: 'Edit', file_path: '/work/app/a.ts', old_string: 'a', new_string: 'b', agentId: 'a1' })
+
+  const out = await $.command.run({ command: 'fireteam', args: 'debrief', origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } })
+
+  expect(String((out as { text?: string }).text)).toMatch(/SCORE \d+/)
+  expect(String((out as { text?: string }).text)).toContain('ALPHA: damage 1')
+  expect(String((out as { text?: string }).text)).toContain('MVP: ALPHA')
 })

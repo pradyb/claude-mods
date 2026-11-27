@@ -12,19 +12,21 @@ import { type Pack, packOf } from './score'
 
 /** One triggered effect. Several can show at once; each plays from its own start time. */
 export type Fx = {
-  kind: 'hit' | 'kill' | 'dmg' | 'click' | 'drone' | 'uav' | 'airstrike' | 'gunship' | 'armor'
+  kind: 'hit' | 'kill' | 'dmg' | 'click' | 'drone' | 'uav' | 'airstrike' | 'gunship' | 'armor' | 'fire'
   /** Where it lands, in percent of the window from its top left (clicks only). */
   x: number
   y: number
   /** Counts up per effect, so each gets its own keyframe names. */
   n: number
+  /** The weapon's silhouette key (fire only). */
+  g?: string
   /** When it began, in epoch milliseconds. */
   t0: number
 }
 
 /** How long each effect runs, in seconds; past that it is dropped from the drawing. */
 export const LENGTH: Record<Fx['kind'], number> = {
-  hit: 0.6, kill: 1.4, dmg: 1.4, click: 0.8, drone: 4, uav: 5, airstrike: 2.2, gunship: 4, armor: 2.6,
+  hit: 0.6, kill: 1.4, dmg: 1.4, click: 0.8, drone: 4, uav: 5, airstrike: 2.2, gunship: 4, armor: 2.6, fire: 2,
 }
 /** How long an event banner shows, in seconds. */
 export const BANNER = 4.5
@@ -43,6 +45,18 @@ const GUNS: Record<string, string> = {
   shotgun: '<rect x="1" y="9" width="13" height="5"/><rect x="14" y="9" width="14" height="5"/><rect x="28" y="9" width="35" height="3"/><rect x="30" y="12" width="16" height="3"/><path d="M16 14h4l-1 7h-4z"/>',
   smg: '<rect x="6" y="9" width="8" height="4"/><rect x="14" y="8" width="22" height="6"/><rect x="36" y="9" width="14" height="4"/><rect x="50" y="10" width="10" height="2"/><path d="M26 14h5l0 10h-5z"/><path d="M17 14h4l-1 7h-4z"/><rect x="24" y="6" width="8" height="2"/>',
   sniper: '<rect x="1" y="8" width="14" height="6"/><rect x="15" y="9" width="22" height="5"/><rect x="37" y="10" width="26" height="2"/><rect x="22" y="3" width="16" height="4"/><rect x="21" y="6" width="3" height="3"/><rect x="35" y="6" width="3" height="3"/><path d="M18 14h4l-1 7h-4z"/><path d="M46 12h1l-4 9h-1z"/>',
+}
+// How each weapon fires across the window: bullets, gap between them, seconds to cross, tracer length, spread (percent of height).
+const FIRE: Record<string, { n: number; gap: number; dur: number; len: number; spread: number; rocket?: boolean }> = {
+  ar: { n: 3, gap: 0.09, dur: 0.5, len: 110, spread: 0 },
+  ak: { n: 3, gap: 0.1, dur: 0.5, len: 110, spread: 0 },
+  bullpup: { n: 3, gap: 0.09, dur: 0.5, len: 110, spread: 0 },
+  smg: { n: 5, gap: 0.06, dur: 0.45, len: 90, spread: 0 },
+  lmg: { n: 6, gap: 0.07, dur: 0.5, len: 110, spread: 0 },
+  pistol: { n: 1, gap: 0, dur: 0.45, len: 80, spread: 0 },
+  shotgun: { n: 5, gap: 0, dur: 0.55, len: 50, spread: 2.2 },
+  sniper: { n: 1, gap: 0, dur: 0.25, len: 240, spread: 0 },
+  launcher: { n: 1, gap: 0, dur: 0.9, len: 150, spread: 0, rocket: true },
 }
 const DRONE = (bad: string) => `<g fill="#cfd3c4"><rect x="-14" y="-2" width="28" height="4" rx="2"/><rect x="-4" y="-4" width="8" height="8" rx="2"/><ellipse cx="-14" cy="-4" rx="8" ry="1.4"/><ellipse cx="14" cy="-4" rx="8" ry="1.4"/></g><circle cy="3" r="1.4" fill="${bad}"/>`
 
@@ -118,8 +132,8 @@ const marker = (size: number, colour: string, width: number) =>
   `<path stroke="${colour}" stroke-width="${width}" stroke-linecap="square" d="M${-size} ${-size}l${size * 0.55} ${size * 0.55}M${size} ${-size}l${-size * 0.55} ${size * 0.55}M${-size} ${size}l${size * 0.55} ${-size * 0.55}M${size} ${size}l${-size * 0.55} ${-size * 0.55}"/>`
 
 /** A labelled bar: label, fill from 0 to 1, value. */
-const bar = (P: Pack, y: number, label: string, frac: number, value: string) =>
-  `<text x="20" y="${y}" ${FONT} font-size="12" letter-spacing="1.5" fill="${P.dim}">${label}</text><rect x="104" y="${y - 7}" width="134" height="4" fill="${P.text}" fill-opacity=".12"/><rect x="104" y="${y - 7}" width="${(134 * Math.max(0, Math.min(1, frac))).toFixed(1)}" height="4" fill="${P.accent}"/><text x="282" y="${y}" text-anchor="end" ${FONT} font-size="13" fill="${P.text}">${value}</text>`
+const bar = (P: Pack, y: number, label: string, frac: number, value: string, colour = P.accent) =>
+  `<text x="20" y="${y}" ${FONT} font-size="12" letter-spacing="1.5" fill="${P.dim}">${label}</text><rect x="104" y="${y - 7}" width="134" height="4" fill="${P.text}" fill-opacity=".12"/><rect x="104" y="${y - 7}" width="${(134 * Math.max(0, Math.min(1, frac))).toFixed(1)}" height="4" fill="${colour}"/><text x="282" y="${y}" text-anchor="end" ${FONT} font-size="13" fill="${P.text}">${value}</text>`
 
 type Drawn = { css: string; radar: string; right: string; win: string }
 
@@ -187,6 +201,36 @@ const effect = (P: Pack, fx: Fx, age: number): Drawn => {
         css: `@keyframes gs${n}{0%{opacity:0;transform:translate(0,0)}15%{opacity:.85}85%{opacity:.85}100%{opacity:0;transform:translate(-40px,60px)}}`,
         win: `<svg x="88%" y="62%" overflow="visible"><g opacity="0" style="animation:gs${n} 4s ${at} ease-in-out forwards" fill="none" stroke="#e8f0e0" stroke-width="2"><circle r="70" stroke-dasharray="10 8"/><path d="M-100 0H-30M30 0H100M0 -100V-30M0 30V100"/><path d="${brackets(-24, -24, 48, 48, 10)}"/></g></svg>`,
       }
+    case 'fire': {
+      // From the left edge to the right gutter at about the height of the prompt: behind the chat column the
+      // tracer is out of sight, so it leaves the left gutter and lands in the right one.
+      const f = FIRE[fx.g ?? 'ar'] ?? FIRE.ar!
+      const y = 86
+      let shots = ''
+
+      for (let i = 0; i < f.n; i++) {
+        const yy = (f.spread ? y + (i - (f.n - 1) / 2) * f.spread : y + (rnd() - 0.5) * 0.8).toFixed(2)
+        const d = i * f.gap
+        const start = `${(d - age).toFixed(2)}s`
+        const hit = `${(d + f.dur * 0.72 - age).toFixed(2)}s`
+        const body = f.rocket
+          ? `<path d="M0 0L-${f.len} -4V4Z" fill="url(#trail)"/><rect x="-6" y="-4" width="26" height="8" rx="4" fill="${P.text}"/><circle cx="-6" r="5" fill="${P.accent}"/>`
+          : `<path d="M0 0L-${f.len} -1.5V1.5Z" fill="url(#trail)"/><rect x="-3" y="-1.5" width="14" height="3" rx="1.5" fill="#ffe9a8"/>`
+
+        shots += `<svg x="0" y="${yy}%" overflow="visible"><g opacity="0" style="animation:bl${n} ${f.dur}s ${start} linear forwards">${body}</g></svg>`
+        shots += `<svg x="${gx}%" y="${yy}%" overflow="visible"><g class="fx" opacity="0" style="animation:pp${n} .6s ${hit} ease-out forwards">${marker(f.rocket ? 14 : 8, f.rocket ? P.bad : P.text, f.rocket ? 4 : 2.5)}</g></svg>`
+      }
+      const flash = `<svg x="1.5%" y="${y}%" overflow="visible"><circle class="fx" r="16" fill="url(#blast)" opacity="0" style="animation:mf${n} .25s ${(-age).toFixed(2)}s ease-out forwards"/></svg>`
+      const blast = f.rocket
+        ? `<svg x="${gx}%" y="${y}%" overflow="visible"><circle class="fx" r="60" fill="url(#blast)" opacity="0" style="animation:mf${n} .6s ${(f.dur * 0.72 - age).toFixed(2)}s ease-out forwards"/></svg>`
+        : ''
+
+      return {
+        ...none,
+        css: `${pop}@keyframes mf${n}{0%{opacity:.95;transform:scale(.3)}100%{opacity:0;transform:scale(1.4)}}@keyframes bl${n}{0%{opacity:1;transform:translateX(0)}85%{opacity:1}100%{opacity:0;transform:translateX(130vw)}}`,
+        win: flash + shots + blast,
+      }
+    }
     case 'armor':
       return {
         ...none,
@@ -208,6 +252,15 @@ export const scene = (fxs: readonly Fx[], v: View, now: number): string => {
   const spin = (dur: number) =>
     `<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="${dur}s" begin="-${(t % dur).toFixed(2)}s" repeatCount="indefinite"/>`
   const shots = v.hits + v.errs
+  const lv = v.live
+  const squad = Math.min(FRIENDS.length, lv?.squad ?? 0)
+  const left = (used?: number) => (used === undefined ? null : Math.max(0, 100 - Math.round(used)))
+  const ammo = left(lv?.ctx)
+  const fuel = left(lv?.fuel)
+  const mins = lv?.since !== undefined && v.working ? Math.max(0, Math.floor((now - lv.since) / 60000)) : null
+  // Low rounds go amber, then red.
+  const low = (n: number | null) => (n === null || n > 35 ? P.accent : n > 15 ? P.warn : P.bad)
+  const where = [lv?.branch ? `BR ${plain(lv.branch).slice(0, 14)}` : '', mins === null ? '' : `${mins}M`].filter(Boolean).join(' · ')
   const acc = shots ? Math.round((100 * v.hits) / shots) : null
   const line = 'stroke="#ffffff" stroke-opacity=".12"'
 
@@ -218,7 +271,7 @@ export const scene = (fxs: readonly Fx[], v: View, now: number): string => {
 <g clip-path="url(#rdr)">
 <g fill="none" ${line}><circle r="${RR * 0.66}"/><circle r="${RR * 0.33}"/><path d="M-${RR} 0H${RR}M0 -${RR}V${RR}"/></g>
 <g><path d="M0 0L0 -${RR}A${RR} ${RR} 0 0 0 -${(RR * 0.7).toFixed(0)} -${(RR * 0.7).toFixed(0)}Z" fill="${P.good}" fill-opacity=".18"/><rect x="-.8" y="-${RR}" width="1.6" height="${RR}" fill="${P.good}" fill-opacity=".6"/>${spin(6)}</g>
-${FRIENDS.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" fill="${P.good}"/>`).join('')}
+${FRIENDS.map(([x, y], i) => i < squad ? `<g class="sq"><circle cx="${x}" cy="${y}" r="8" fill="none" stroke="${P.accent}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="4" fill="${P.accent}"/></g>` : `<circle cx="${x}" cy="${y}" r="4" fill="${P.good}"/>`).join('')}
 ${hostiles.length ? `<g class="en">${hostiles.map(([x, y]) => `<rect x="${x - 3.5}" y="${y - 3.5}" width="7" height="7" fill="${P.bad}" transform="rotate(45 ${x} ${y})"/>`).join('')}</g>` : ''}
 ${layer('radar')}
 </g>
@@ -227,17 +280,21 @@ ${layer('radar')}
 </g>`
   const plates = [0, 1, 2, 3, 4].map(i => `<rect x="${20 + i * 30}" y="0" width="26" height="6" fill="${i < v.plates ? (v.working ? P.good : P.dim) : P.text}" fill-opacity="${i < v.plates ? 1 : 0.12}"/>`).join('')
   const card = `<g class="wide" transform="translate(0 262)">
-<rect x="8" y="0" width="${W - 16}" height="214" fill="${P.panel}" fill-opacity=".85" ${line}/>
-<path d="${brackets(8, 0, W - 16, 214, 10)}" fill="none" stroke="${P.accent}" stroke-width="2"/>
+<rect x="8" y="0" width="${W - 16}" height="270" fill="${P.panel}" fill-opacity=".85" ${line}/>
+<path d="${brackets(8, 0, W - 16, 270, 10)}" fill="none" stroke="${P.accent}" stroke-width="2"/>
 <text x="20" y="28" ${FONT} font-size="16" letter-spacing="2" fill="${P.dim}">[${plain(v.unit)}] <tspan fill="${P.accent}">${plain(v.call)}</tspan></text>
-<text x="20" y="46" ${FONT} font-size="12" letter-spacing="1.5" fill="${P.dim}">RECON · ${plain(v.gun)} · L${v.level}</text>
+<text x="20" y="46" ${FONT} font-size="12" letter-spacing="1.5" fill="${P.dim}">RECON · ${plain(v.gun)} · L${v.level}${squad ? ` · SQUAD ${lv?.squad}` : ''}</text>
 <g transform="translate(206 16) scale(1.2)" fill="${v.camo ?? P.text}">${GUNS[v.gunIcon] ?? ''}</g>
 <text x="20" y="72" ${FONT} font-size="14" letter-spacing="1.5" fill="${v.working ? P.good : P.dim}">${plain(v.working ? v.act : 'STANDING BY').slice(0, 30)}</text>
-<g transform="translate(0 84)">${plates}</g>
-${bar(P, 118, 'DAMAGE', v.hits / 60, String(v.hits))}
-${bar(P, 142, 'ACCURACY', (acc ?? 0) / 100, acc === null ? '--' : `${acc}%`)}
-${bar(P, 166, 'RECON', v.reads / 40, String(v.reads))}
-${bar(P, 190, 'DRONES', v.drones / 10, String(v.drones))}
+<text x="20" y="90" ${FONT} font-size="12" letter-spacing="1.5" fill="${P.dim}">${where}</text>
+${lv?.cost === undefined ? '' : `<text x="282" y="90" text-anchor="end" ${FONT} font-size="12" letter-spacing="1.5" fill="${P.dim}">USD ${lv.cost.toFixed(2)}</text>`}
+<g transform="translate(0 100)">${plates}</g>
+${bar(P, 134, 'AMMO', (ammo ?? 0) / 100, ammo === null ? '--' : `${ammo}%`, low(ammo))}
+${bar(P, 158, 'FUEL', (fuel ?? 0) / 100, fuel === null ? '--' : `${fuel}%`, low(fuel))}
+${bar(P, 182, 'DAMAGE', v.hits / 60, String(v.hits))}
+${bar(P, 206, 'ACCURACY', (acc ?? 0) / 100, acc === null ? '--' : `${acc}%`)}
+${bar(P, 230, 'RECON', v.reads / 40, String(v.reads))}
+${bar(P, 254, 'DRONES', v.drones / 10, String(v.drones))}
 </g>`
   const age = v.pop ? (now - v.pop.t) / 1000 : Infinity
   const popColour = v.pop?.kind === 'dmg' ? P.bad : v.pop?.kind === 'info' ? P.warn : P.accent
@@ -292,8 +349,10 @@ ${layer('right')}`
 .fx{transform-box:fill-box;transform-origin:center}
 .cmp{${loop('cmp', 120, 'linear')}}
 .en{${loop('en', v.working ? 2.4 : 6)}}
+.sq{${loop('sq', 1.2)}}
 @keyframes cmp{to{transform:translateX(-${360 * DEG}px)}}
 @keyframes en{50%{opacity:.15}}
+@keyframes sq{50%{opacity:.35}}
 @keyframes bn{0%{opacity:0}6%{opacity:1}80%{opacity:1}100%{opacity:0}}
 @media (max-width:1399px){.wide{display:none}}
 @media (max-width:1259px){.side{display:none}}
@@ -328,7 +387,7 @@ ${layer('css')}
 <svg width="100%" height="100%" viewBox="0 0 ${W} 900" preserveAspectRatio="xMinYMin meet" overflow="visible">
 ${radar}
 ${card}
-${bannerAt(8, 492, W - 16)}
+${bannerAt(8, 548, W - 16)}
 </svg>
 <svg width="100%" height="100%" viewBox="0 0 ${W} 900" preserveAspectRatio="xMaxYMin meet" overflow="visible">
 ${right}
