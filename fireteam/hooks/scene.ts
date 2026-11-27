@@ -12,8 +12,8 @@ import { type Pack, packOf } from './score'
 
 /** One triggered effect. Several can show at once; each plays from its own start time. */
 export type Fx = {
-  kind: 'hit' | 'kill' | 'dmg' | 'click' | 'drone' | 'uav' | 'airstrike' | 'gunship' | 'armor' | 'fire'
-  /** Where it lands, in percent of the window from its top left (clicks only). */
+  kind: 'hit' | 'kill' | 'dmg' | 'boom' | 'drone' | 'uav' | 'airstrike' | 'gunship' | 'armor' | 'fire'
+  /** Where it lands, in percent of the window from its top left (explosions only). */
   x: number
   y: number
   /** Counts up per effect, so each gets its own keyframe names. */
@@ -26,13 +26,15 @@ export type Fx = {
 
 /** How long each effect runs, in seconds; past that it is dropped from the drawing. */
 export const LENGTH: Record<Fx['kind'], number> = {
-  hit: 0.6, kill: 1.4, dmg: 1.4, click: 0.8, drone: 4, uav: 5, airstrike: 2.2, gunship: 4, armor: 2.6, fire: 2,
+  hit: 0.6, kill: 1.4, dmg: 1.4, boom: 1.8, drone: 4, uav: 5, airstrike: 2.2, gunship: 4, armor: 2.6, fire: 2,
 }
 /** How long an event banner shows, in seconds. */
 export const BANNER = 4.5
 
 const FONT = `font-family="Bahnschrift, 'DIN Condensed', 'Arial Narrow', sans-serif" font-weight="700"`
 const W = 300
+// The desktop title bar covers the top of the window, so everything starts this far down.
+const TOP = 48
 
 // Weapon silhouettes, 64 x 24 (herdr-fireteam's own art, MIT).
 const GUNS: Record<string, string> = {
@@ -154,15 +156,33 @@ const effect = (P: Pack, fx: Fx, age: number): Drawn => {
 
   switch (kind) {
     case 'hit':
-    case 'click': {
-      const x = kind === 'click' ? fx.x.toFixed(1) : gx
-      const y = kind === 'click' ? fx.y.toFixed(1) : gy
+      return {
+        ...none,
+        css: pop,
+        win: `<svg x="${gx}%" y="${gy}%" overflow="visible"><g class="fx" opacity="0" style="animation:pp${n} ${LENGTH.hit}s ${at} ease-out forwards">${marker(12, P.text, 3)}</g></svg>`,
+      }
+    case 'boom': {
+      // A bomb where you clicked: a flash, a fireball, a shockwave ring, sparks that fly out and fall, and smoke.
+      const x = fx.x.toFixed(1)
+      const y = fx.y.toFixed(1)
+      let css = `@keyframes fl${n}{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(1.6)}}@keyframes fb${n}{0%{opacity:.95;transform:scale(.2)}30%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.5)}}@keyframes sw${n}{0%{opacity:.9;transform:scale(.1)}100%{opacity:0;transform:scale(1)}}@keyframes sm${n}{0%{opacity:0;transform:translateY(0) scale(.4)}25%{opacity:.5}100%{opacity:0;transform:translateY(-40px) scale(1.4)}}${ping}`
+      let sparks = ''
+
+      for (let i = 0; i < 10; i++) {
+        const a = rnd() * Math.PI * 2
+        const r = 70 + rnd() * 90
+        const dx = (Math.cos(a) * r).toFixed(0)
+        const dy = (Math.sin(a) * r + 30).toFixed(0)
+
+        css += `@keyframes sk${n}_${i}{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(${dx}px,${dy}px)}}`
+        sparks += `<circle r="${(2 + rnd() * 2).toFixed(1)}" fill="${i % 2 ? '#ffd08a' : P.accent}" opacity="0" style="animation:sk${n}_${i} .8s ${at} ease-out forwards"/>`
+      }
 
       return {
         ...none,
-        css: pop + (kind === 'click' ? ping : ''),
-        win: `<svg x="${x}%" y="${y}%" overflow="visible"><g class="fx" opacity="0" style="animation:pp${n} ${LENGTH[kind]}s ${at} ease-out forwards">${marker(12, P.text, 3)}</g></svg>`,
-        radar: kind === 'click' ? `<circle class="fx" r="${RR}" fill="none" stroke="${P.good}" stroke-width="2" opacity="0" style="animation:pg${n} .8s ${at} ease-out forwards"/>` : '',
+        css,
+        win: `<svg x="${x}%" y="${y}%" overflow="visible"><circle class="fx" r="140" fill="#2a2a26" opacity="0" style="animation:sm${n} 1.8s ${at} ease-out forwards"/><circle class="fx" r="130" fill="none" stroke="${P.text}" stroke-width="4" opacity="0" style="animation:sw${n} .9s ${at} ease-out forwards"/><circle class="fx" r="100" fill="url(#blast)" opacity="0" style="animation:fb${n} 1s ${at} ease-out forwards"/><circle class="fx" r="44" fill="#fff4cc" opacity="0" style="animation:fl${n} .3s ${at} ease-out forwards"/>${sparks}</svg>`,
+        radar: `<circle class="fx" r="${RR}" fill="none" stroke="${P.good}" stroke-width="2" opacity="0" style="animation:pg${n} .8s ${at} ease-out forwards"/>`,
       }
     }
     case 'kill':
@@ -375,22 +395,24 @@ ${layer('css')}
 </svg>
 <rect width="100%" height="100%" fill="url(#vig)"/>
 <svg width="100%" height="100%" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMin meet" overflow="visible">
-<g transform="translate(0 22)">
+<g transform="translate(0 ${22 + TOP})">
 <rect x="560" y="0" width="480" height="40" fill="${P.panel}" fill-opacity=".7"/>
 <g clip-path="url(#cmpw)"><g transform="translate(${800 - 360 * DEG} 4)"><g class="cmp" fill="${P.text}" ${FONT}>${compass(P)}</g></g></g>
 <path d="M800 42l-7 9h14z" fill="${P.accent}"/>
 <path d="${brackets(556, -4, 488, 48, 10)}" fill="none" stroke="${P.accent}" stroke-opacity=".6" stroke-width="1.5"/>
 </g>
-<g class="narrow">${bannerAt(650, 82, 300)}</g>
+<g class="narrow">${bannerAt(650, 82 + TOP, 300)}</g>
 </svg>
 <g class="side">
 <svg width="100%" height="100%" viewBox="0 0 ${W} 900" preserveAspectRatio="xMinYMin meet" overflow="visible">
+<g transform="translate(0 ${TOP})">
 ${radar}
 ${card}
 ${bannerAt(8, 548, W - 16)}
+</g>
 </svg>
 <svg width="100%" height="100%" viewBox="0 0 ${W} 900" preserveAspectRatio="xMaxYMin meet" overflow="visible">
-${right}
+<g transform="translate(0 ${TOP})">${right}</g>
 </svg>
 </g>
 ${layer('win')}

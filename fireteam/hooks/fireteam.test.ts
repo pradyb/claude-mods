@@ -109,6 +109,15 @@ test('every weapon fires bullets from the left edge to the right gutter', async 
   expect(scene([{ kind: 'fire', x: 0, y: 0, n: 7, g: 'shotgun', t0: NOW }], VIEW, NOW).split('animation:bl7 ').length - 1).toBe(5)
 })
 
+test('a click sets off a bomb where it landed, with sparks, a ring and a radar ping', async () => {
+  const svg = scene([{ kind: 'boom', x: 12.5, y: 40, n: 9, t0: NOW - 100 }], VIEW, NOW)
+
+  expect(svg.includes('<svg x="12.5%" y="40.0%"')).toBe(true)
+  expect(svg.includes('animation:sw9 ')).toBe(true)
+  expect(svg.split('animation:sk9_').length - 1).toBe(10)
+  expect(svg.includes('animation:pg9 ')).toBe(true)
+})
+
 test('the squad: callsigns, who is running, the score and the MVP', async () => {
   expect(mateName(0)).toBe('ALPHA')
   expect(mateName(6)).toBe('ALPHA2')

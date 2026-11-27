@@ -100,7 +100,13 @@ const CUES: NonNullable<ThemeSetArgs['sound']>['cues'] = {
   ask: { layers: [{ wave: 'square', notes: ['A5', 'A5'], step: 0.14, gain: 0.07, release: 0.07, filter: { type: 'bandpass', hz: 1600 } }] },
   error: { layers: [{ wave: 'saw', notes: ['D2', 'C#2'], step: 0.12, gain: 0.16, release: 0.3, filter: { type: 'lowpass', hz: 700 } }] },
   compact: { layers: [{ wave: 'pink', gain: 0.18, attack: 0.3, release: 0.9, filter: { type: 'bandpass', hz: 400, to: 2400 } }] },
-  click: { layers: [{ wave: 'triangle', notes: ['B5'], gain: 0.07, release: 0.03 }] },
+  // A click on the backdrop sets off a bomb: a deep thump and a burst of rumble.
+  click: {
+    layers: [
+      { wave: 'sine', notes: ['C1'], gain: 0.4, release: 0.5 },
+      { wave: 'brown', gain: 0.3, release: 0.45, filter: { type: 'lowpass', hz: 900 } },
+    ],
+  },
 }
 
 /** Set the look for a pack, richest first: a build that refuses sound or style still gets the rest. */
@@ -386,7 +392,7 @@ export const register: Register = on => {
 
   on('ui.pointer', ($, e, next) => {
     if (e.scene === SCENE) {
-      play('click', e.x * 100, e.y * 100)
+      play('boom', e.x * 100, e.y * 100)
       $.ui.invalidate('ui.render')
     }
 

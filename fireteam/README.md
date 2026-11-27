@@ -73,7 +73,7 @@ Only your own prompts make contracts. Task notifications, scheduled runs and pro
 | A subagent starts | It joins the squad and lights a radar blip |
 | Your turn ends with an answer | A kill: kill-feed line named from your prompt, a red hitmarker with +100, and a banner (CONTRACT CLEAR, or the medals, a promotion or a completed challenge) |
 | Your turn ends on an error | MISSION FAILED, and the streak resets |
-| You click the backdrop | A hitmarker at the click and a radar ping |
+| You click the backdrop | A bomb goes off where you clicked (flash, fireball, shockwave, sparks and smoke, with a boom) and the radar pings |
 
 **Medals**: DOUBLE and TRIPLE CLEAR (several contracts within a minute), FLAWLESS (no tool failures and at least one hit), BOSS DOWN (3 or more failures), FIRST BLOOD (first of the day). **Rank** goes PVT to GEN, one rank per 4 cleared contracts, where a challenge counts as 2.
 
