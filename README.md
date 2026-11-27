@@ -27,6 +27,7 @@ A mod runs with your permissions, so read what it does first. `claude plugin val
 | [turn-summary](turn-summary) | 0.1.2 | After each turn, a summary under the prompt: how long it took, tools called, subagents and background agents started. Stays until your next prompt. |
 | [snippets](snippets) | 0.1.1 | Text replacement: type `;name` and it is expanded to saved text when you press Enter. Add, list and remove with `/snip`; stored in `~/.claude/snippets.json`. |
 | [justice-league](justice-league) | 0.9.1 | A dark hero-team theme for the desktop app: a night-city backdrop with comic-style heroes, a quiet soundtrack and comic-panel messages, with an animation for clicks, turn starts, tool calls and turn ends. |
+| [fireteam](fireteam) | 0.2.0 | A military-shooter HUD theme for the desktop app, ported from the Herdr Fireteam layout: a radar, operator card with ammo (context) and fuel (usage limit) gauges, a squad of your subagents, kill feed and daily challenges beside the chat, your weapon firing tracers across the window when you send a prompt, scorestreaks you call, a loadout with perks, weapon mastery and five colour packs, all earned from Claude's real tool calls. `/fireteam` opens the panel. |
 
 ## Versioning
 

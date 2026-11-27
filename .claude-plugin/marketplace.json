@@ -59,6 +59,11 @@
       "name": "justice-league",
       "source": "./justice-league",
       "description": "Dark hero-team theme for the desktop app: a night-city backdrop with comic-style heroes, a quiet soundtrack and comic-panel messages, with an animation for clicks, turn starts, tool calls and turn ends."
+    },
+    {
+      "name": "fireteam",
+      "source": "./fireteam",
+      "description": "Military-shooter HUD theme for the desktop app: a radar, operator card, kill feed and daily challenges beside the chat, scorestreaks you call, a loadout with perks, weapon mastery and five colour packs, all earned from Claude's real tool calls."
     }
   ],
   "description": "Mods (plugins) for Claude Code."
